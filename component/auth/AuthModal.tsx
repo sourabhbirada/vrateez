@@ -5,7 +5,7 @@ import { X, Eye, EyeOff, Mail, Lock, UserIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AuthModal() {
-    const { isLoginOpen, isSignup, closeAuth, login, signup, openLogin, openSignup } = useAuth();
+    const { isLoginOpen, isSignup, closeAuth, login, signup, openLogin, openSignup, isLoading, authError, clearError } = useAuth();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -13,13 +13,21 @@ export default function AuthModal() {
 
     if (!isLoginOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        clearError();
+
+        let success = false;
         if (isSignup) {
-            signup(name, email, password);
+            success = await signup(name, email, password);
         } else {
-            login(email, password);
+            success = await login(email, password);
         }
+
+        if (!success) {
+            return;
+        }
+
         setName('');
         setEmail('');
         setPassword('');
@@ -34,7 +42,7 @@ export default function AuthModal() {
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
                     {/* Header */}
-                    <div className="relative bg-gradient-to-br from-amber-50 to-orange-100 px-8 pt-8 pb-6">
+                    <div className="relative bg-linear-to-br from-amber-50 to-orange-100 px-8 pt-8 pb-6">
                         <button
                             onClick={closeAuth}
                             className="absolute top-4 right-4 p-1 hover:bg-black/10 rounded-full transition"
@@ -108,11 +116,18 @@ export default function AuthModal() {
                             </div>
                         </div>
 
+                        {authError && (
+                            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                                {authError}
+                            </p>
+                        )}
+
                         <button
                             type="submit"
+                            disabled={isLoading}
                             className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors"
                         >
-                            {isSignup ? 'CREATE ACCOUNT' : 'LOG IN'}
+                            {isLoading ? 'PLEASE WAIT...' : isSignup ? 'CREATE ACCOUNT' : 'LOG IN'}
                         </button>
                     </form>
 

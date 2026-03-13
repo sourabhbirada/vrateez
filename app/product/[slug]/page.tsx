@@ -2,20 +2,102 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Star, ShoppingCart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw } from 'lucide-react';
-import { getProductBySlug, products } from '@/data/products';
+import { getProductBySlug, products as staticProducts } from '@/data/products';
 import { useCart } from '@/context/CartContext';
+import { getProductBySlugApi, getProductsApi } from '@/lib/api/productApi';
+import type { Product as ApiProduct } from '@/lib/api/types';
+
+interface ProductView {
+    id: string | number;
+    name: string;
+    slug: string;
+    category: 'cookie' | 'energy-bar' | 'desert-date';
+    image: string;
+    images: string[];
+    rating: number;
+    reviews: number;
+    price: number;
+    originalPrice: number;
+    discount: string;
+    weight: string;
+    description: string;
+    benefits: string[];
+    ingredients: string;
+    nutritionHighlights: string[];
+}
 
 export default function ProductPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const product = getProductBySlug(slug);
+    const staticProduct = getProductBySlug(slug);
+    const [product, setProduct] = useState<ProductView | null>(
+        staticProduct
+            ? { ...staticProduct }
+            : null
+    );
+    const [allProducts, setAllProducts] = useState<ProductView[]>(staticProducts);
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState<'description' | 'nutrition' | 'ingredients'>('description');
+
+    useEffect(() => {
+        async function loadProduct() {
+            try {
+                const [apiProduct, apiList] = await Promise.all([
+                    getProductBySlugApi(slug),
+                    getProductsApi({ limit: 100 }),
+                ]);
+
+                setProduct({
+                    id: apiProduct._id,
+                    name: apiProduct.name,
+                    slug: apiProduct.slug,
+                    category: apiProduct.category,
+                    image: apiProduct.image,
+                    images: apiProduct.images,
+                    rating: apiProduct.rating,
+                    reviews: apiProduct.reviews,
+                    price: apiProduct.price,
+                    originalPrice: apiProduct.originalPrice,
+                    discount: apiProduct.discount,
+                    weight: apiProduct.weight,
+                    description: apiProduct.description,
+                    benefits: apiProduct.benefits,
+                    ingredients: apiProduct.ingredients,
+                    nutritionHighlights: apiProduct.nutritionHighlights,
+                });
+
+                setAllProducts(
+                    apiList.items.map((p: ApiProduct) => ({
+                        id: p._id,
+                        name: p.name,
+                        slug: p.slug,
+                        category: p.category,
+                        image: p.image,
+                        images: p.images,
+                        rating: p.rating,
+                        reviews: p.reviews,
+                        price: p.price,
+                        originalPrice: p.originalPrice,
+                        discount: p.discount,
+                        weight: p.weight,
+                        description: p.description,
+                        benefits: p.benefits,
+                        ingredients: p.ingredients,
+                        nutritionHighlights: p.nutritionHighlights,
+                    }))
+                );
+            } catch {
+                // Keep static fallback data.
+            }
+        }
+
+        void loadProduct();
+    }, [slug]);
 
     if (!product) {
         return (
@@ -42,7 +124,7 @@ export default function ProductPage() {
     };
 
     // Related products (same category, different id)
-    const related = products
+    const related = allProducts
         .filter(p => p.category === product.category && p.id !== product.id)
         .slice(0, 4);
 
@@ -75,7 +157,7 @@ export default function ProductPage() {
                                 <button
                                     key={i}
                                     onClick={() => setSelectedImage(i)}
-                                    className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition ${
+                                    className={`relative w-20 h-20 rounded-lg overflow-hidden shrink-0 border-2 transition ${
                                         i === selectedImage ? 'border-orange-500' : 'border-transparent hover:border-gray-300'
                                     }`}
                                 >

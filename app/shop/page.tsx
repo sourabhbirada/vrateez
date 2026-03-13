@@ -2,30 +2,79 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ShoppingCart, Star } from 'lucide-react';
-import { products, categories, type Product } from '@/data/products';
+import { products as staticProducts, categories } from '@/data/products';
 import { useCart } from '@/context/CartContext';
+import { getProductsApi } from '@/lib/api/productApi';
+import type { Product as ApiProduct } from '@/lib/api/types';
+
+interface ShopProduct {
+    id: string | number;
+    name: string;
+    slug: string;
+    category: 'cookie' | 'energy-bar' | 'desert-date';
+    image: string;
+    images: string[];
+    rating: number;
+    reviews: number;
+    price: number;
+    originalPrice: number;
+    discount: string;
+    weight: string;
+    description: string;
+}
 
 function ShopContent() {
     const searchParams = useSearchParams();
     const initialCategory = searchParams.get('category') || 'all';
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'rating'>('default');
+    const [allProducts, setAllProducts] = useState<ShopProduct[]>(staticProducts);
     const { addToCart } = useCart();
+
+    useEffect(() => {
+        async function loadProducts() {
+            try {
+                const response = await getProductsApi({ limit: 100 });
+                const mapped: ShopProduct[] = response.items.map((p: ApiProduct) => ({
+                    id: p._id,
+                    name: p.name,
+                    slug: p.slug,
+                    category: p.category,
+                    image: p.image,
+                    images: p.images,
+                    rating: p.rating,
+                    reviews: p.reviews,
+                    price: p.price,
+                    originalPrice: p.originalPrice,
+                    discount: p.discount,
+                    weight: p.weight,
+                    description: p.description,
+                }));
+                if (mapped.length > 0) {
+                    setAllProducts(mapped);
+                }
+            } catch {
+                // Keep static fallback products if API is unavailable.
+            }
+        }
+
+        void loadProducts();
+    }, []);
 
     let filtered =
         activeCategory === 'all'
-            ? [...products]
-            : products.filter(p => p.category === activeCategory);
+            ? [...allProducts]
+            : allProducts.filter(p => p.category === activeCategory);
 
     // Sort
     if (sortBy === 'price-asc') filtered.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-desc') filtered.sort((a, b) => b.price - a.price);
     else if (sortBy === 'rating') filtered.sort((a, b) => b.rating - a.rating);
 
-    const handleAddToCart = (product: Product) => {
+    const handleAddToCart = (product: ShopProduct) => {
         addToCart({
             id: product.id,
             name: product.name,
@@ -39,7 +88,7 @@ function ShopContent() {
     return (
         <main className="bg-white min-h-screen">
             {/* Header banner */}
-            <div className="bg-gradient-to-r from-amber-100 to-orange-100 py-14 text-center">
+            <div className="bg-linear-to-r from-amber-100 to-orange-100 py-14 text-center">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">Shop Vrateez</h1>
                 <p className="text-gray-600 max-w-xl mx-auto">
                     Protein cookies, energy bars &amp; superfood snacks — handcrafted for taste, engineered for nutrition.
