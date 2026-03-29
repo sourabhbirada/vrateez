@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, X } from 'lucide-react';
-import { products } from '@/data/products';
+import { getProductsApi } from '@/lib/api/productApi';
+import type { Product } from '@/lib/api/types';
 
 interface SearchModalProps {
     isOpen: boolean;
@@ -13,7 +14,23 @@ interface SearchModalProps {
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const [query, setQuery] = useState('');
+    const [products, setProducts] = useState<Product[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        async function loadProducts() {
+            try {
+                const response = await getProductsApi({ limit: 100 });
+                setProducts(response.items);
+            } catch {
+                setProducts([]);
+            }
+        }
+
+        if (isOpen) {
+            void loadProducts();
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -96,7 +113,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             <div className="p-2">
                                 {results.map(product => (
                                     <Link
-                                        key={product.id}
+                                        key={product._id}
                                         href={`/product/${product.slug}`}
                                         onClick={onClose}
                                         className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-gray-50 transition"

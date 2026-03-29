@@ -73,6 +73,7 @@ export interface Order {
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   orderStatus: "placed" | "processing" | "shipped" | "delivered" | "cancelled";
   subtotal: number;
+  couponCode?: string;
   discountAmount: number;
   shippingCharge: number;
   totalAmount: number;

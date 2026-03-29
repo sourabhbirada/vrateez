@@ -2,18 +2,52 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Sparkles, ShoppingCart } from 'lucide-react';
-import { products } from '@/data/products';
 import { useCart } from '@/context/CartContext';
+import { getProductsApi } from '@/lib/api/productApi';
+import type { Product as ApiProduct } from '@/lib/api/types';
 
-// Mark the newest products (last 3 added) as "new launches"
-const newLaunches = [products[9], products[7], products[6]]; // Desert Date Drops, Energy Bar, Assorted Box
+interface ProductView {
+    id: string;
+    name: string;
+    slug: string;
+    image: string;
+    price: number;
+    originalPrice: number;
+    weight: string;
+    description: string;
+}
 
 export default function NewLaunchesSection() {
+    const [newLaunches, setNewLaunches] = useState<ProductView[]>([]);
     const { addToCart } = useCart();
 
+    useEffect(() => {
+        async function loadNewLaunches() {
+            try {
+                const response = await getProductsApi({ limit: 3 });
+                const mapped = response.items.map((p: ApiProduct) => ({
+                    id: p._id,
+                    name: p.name,
+                    slug: p.slug,
+                    image: p.image,
+                    price: p.price,
+                    originalPrice: p.originalPrice,
+                    weight: p.weight,
+                    description: p.description,
+                }));
+                setNewLaunches(mapped);
+            } catch {
+                setNewLaunches([]);
+            }
+        }
+
+        void loadNewLaunches();
+    }, []);
+
     return (
-        <section className="py-20 bg-gradient-to-b from-white to-amber-50">
+        <section className="py-20 bg-linear-to-b from-white to-amber-50">
             <div className="max-w-7xl mx-auto px-8">
                 {/* Section header */}
                 <div className="text-center mb-12">
@@ -37,7 +71,7 @@ export default function NewLaunchesSection() {
                             className="group relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
                         >
                             {/* NEW badge */}
-                            <div className="absolute top-4 left-4 z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <div className="absolute top-4 left-4 z-10 bg-linear-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                                 <Sparkles size={12} /> NEW
                             </div>
 
@@ -50,7 +84,7 @@ export default function NewLaunchesSection() {
                                         fill
                                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                                    <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
                                 </div>
                             </Link>
 
@@ -73,7 +107,8 @@ export default function NewLaunchesSection() {
                                     </div>
                                     <button
                                         onClick={() => addToCart({
-                                            id: String(product.id),
+                                            id: product.id,
+                                            slug: product.slug,
                                             name: product.name,
                                             image: product.image,
                                             price: product.price,

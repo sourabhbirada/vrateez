@@ -10,9 +10,21 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { createOrderApi, createGuestOrderApi, confirmGuestCodOrderApi } from '@/lib/api/orderApi';
 import { createPaymentIntentApi, verifyPaymentApi, confirmCodOrderApi, createGuestPaymentApi, verifyGuestPaymentApi } from '@/lib/api/paymentApi';
+import { validateCouponApi } from '@/lib/api/couponApi';
+import { getProductsApi } from '@/lib/api/productApi';
 import type { ShippingAddress, GuestInfo, Order } from '@/lib/api/types';
 
 type PaymentMethod = 'stripe' | 'cod';
+
+const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
+
+const isObjectId = (id: string): boolean => OBJECT_ID_REGEX.test(id);
+
+const normalizeText = (value: string): string =>
+    value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
 
 // Stripe Elements options
 const cardElementOptions = {
@@ -48,7 +60,14 @@ function CheckoutForm({
     const elements = useElements();
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [couponInput, setCouponInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<{
+        couponCode: string;
+        discountAmount: number;
+        description: string;
+    } | null>(null);
 
     // Guest info (only shown if not logged in)
     const [guestInfo, setGuestInfo] = useState<GuestInfo>({
@@ -73,7 +92,36 @@ function CheckoutForm({
     // Calculate totals
     const subtotal = totalPrice;
     const shippingCharge = subtotal >= 499 ? 0 : 49;
-    const total = subtotal + shippingCharge;
+    const discountAmount = appliedCoupon?.discountAmount || 0;
+    const total = Math.max(subtotal - discountAmount + shippingCharge, 0);
+
+    const handleApplyCoupon = async () => {
+        if (!couponInput.trim()) {
+            setError('Please enter a coupon code');
+            return;
+        }
+
+        setError(null);
+        setIsApplyingCoupon(true);
+
+        try {
+            const result = await validateCouponApi({
+                couponCode: couponInput.trim(),
+                subtotal,
+            });
+            setAppliedCoupon(result);
+            setCouponInput(result.couponCode);
+        } catch (err) {
+            setAppliedCoupon(null);
+            setError(err instanceof Error ? err.message : 'Unable to apply coupon right now');
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+    };
 
     const validateForm = (): boolean => {
         // Validate guest info if not logged in
@@ -123,23 +171,80 @@ function CheckoutForm({
         try {
             let order: Order;
 
+            const resolveGuestOrderItems = async (): Promise<Array<{ productId: string; quantity: number }>> => {
+                const needsResolution = items.some(item => !isObjectId(item.id));
+
+                if (!needsResolution) {
+                    return items.map(item => ({
+                        productId: item.id,
+                        quantity: item.quantity,
+                    }));
+                }
+
+                const response = await getProductsApi({ limit: 100 });
+                const apiProducts = response.items;
+                if (!apiProducts.length) {
+                    throw new Error('Product catalog is temporarily unavailable. Please refresh and try again in a few seconds.');
+                }
+                const apiBySlug = new Map(apiProducts.map(p => [p.slug, p]));
+
+                return items.map(item => {
+                    if (isObjectId(item.id)) {
+                        return {
+                            productId: item.id,
+                            quantity: item.quantity,
+                        };
+                    }
+
+                    // Prefer slug-based matching when available.
+                    let matchedProduct = item.slug ? apiBySlug.get(item.slug) : undefined;
+
+                    if (!matchedProduct) {
+                        const normalizedItemName = normalizeText(item.name);
+                        const nameMatches = apiProducts.filter(p => normalizeText(p.name) === normalizedItemName);
+                        matchedProduct = nameMatches.find(p => p.price === item.price) || nameMatches[0];
+                    }
+
+                    if (!matchedProduct) {
+                        const normalizedItemName = normalizeText(item.name);
+                        const looseNameMatches = apiProducts.filter(
+                            p =>
+                                normalizeText(p.name).includes(normalizedItemName) ||
+                                normalizedItemName.includes(normalizeText(p.name)),
+                        );
+                        matchedProduct = looseNameMatches.find(p => p.price === item.price) || looseNameMatches[0];
+                    }
+
+                    if (!matchedProduct) {
+                        throw new Error(
+                            `Product \"${item.name}\" is outdated in cart. Please remove it and add again.`,
+                        );
+                    }
+
+                    return {
+                        productId: matchedProduct._id,
+                        quantity: item.quantity,
+                    };
+                });
+            };
+
             // Create order
             if (user) {
                 // Authenticated user
                 order = await createOrderApi({
                     shippingAddress,
-                    paymentMethod: paymentMethod === 'stripe' ? 'razorpay' : 'cod', // Use razorpay as generic online payment
+                    paymentMethod: paymentMethod === 'stripe' ? 'card' : 'cod',
+                    couponCode: appliedCoupon?.couponCode,
                 });
             } else {
                 // Guest user
+                const guestItems = await resolveGuestOrderItems();
                 order = await createGuestOrderApi({
-                    items: items.map(item => ({
-                        productId: item.id,
-                        quantity: item.quantity,
-                    })),
+                    items: guestItems,
                     shippingAddress,
-                    paymentMethod: paymentMethod === 'stripe' ? 'razorpay' : 'cod',
+                    paymentMethod: paymentMethod === 'stripe' ? 'card' : 'cod',
                     guestInfo,
+                    couponCode: appliedCoupon?.couponCode,
                 });
             }
 
@@ -160,6 +265,10 @@ function CheckoutForm({
                     paymentIntent = await createPaymentIntentApi(order._id, 'stripe');
                 } else {
                     paymentIntent = await createGuestPaymentApi(order._id, guestInfo.email, 'stripe');
+                }
+
+                if (!stripe || !elements) {
+                    throw new Error('Stripe payment form is still loading. Please wait a moment and try again.');
                 }
 
                 // Check if Stripe is configured
@@ -418,6 +527,11 @@ function CheckoutForm({
                             <p className="text-xs text-gray-500 mt-2">
                                 Test card: 4242 4242 4242 4242, any future date, any CVC
                             </p>
+                            {!stripe && (
+                                <p className="text-xs text-orange-600 mt-2">
+                                    Loading Stripe secure card form...
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -432,7 +546,7 @@ function CheckoutForm({
                     <div className="space-y-4 max-h-64 overflow-y-auto mb-4">
                         {items.map((item) => (
                             <div key={item.id} className="flex gap-3">
-                                <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                                <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
                                     <Image
                                         src={item.image}
                                         alt={item.name}
@@ -453,10 +567,51 @@ function CheckoutForm({
 
                     {/* Totals */}
                     <div className="border-t pt-4 space-y-2">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Coupon Code</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={couponInput}
+                                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                    placeholder="Enter coupon"
+                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleApplyCoupon}
+                                    disabled={isApplyingCoupon}
+                                    className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+                                >
+                                    {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                                </button>
+                            </div>
+                            {appliedCoupon && (
+                                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
+                                    <span className="text-green-700">
+                                        {appliedCoupon.couponCode} applied ({appliedCoupon.description})
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveCoupon}
+                                        className="text-green-700 font-semibold hover:underline"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Subtotal</span>
                             <span className="font-medium">₹{subtotal}</span>
                         </div>
+                        {discountAmount > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-green-700">Discount</span>
+                                <span className="font-medium text-green-700">-₹{discountAmount}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Shipping</span>
                             <span className={`font-medium ${shippingCharge === 0 ? 'text-green-600' : ''}`}>
@@ -484,7 +639,7 @@ function CheckoutForm({
                     {/* Place Order Button */}
                     <button
                         onClick={handlePlaceOrder}
-                        disabled={isLoading || (paymentMethod === 'stripe' && !stripe)}
+                        disabled={isLoading}
                         className="w-full mt-6 bg-orange-500 text-white py-4 rounded-full font-bold text-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
                     >
                         {isLoading ? (

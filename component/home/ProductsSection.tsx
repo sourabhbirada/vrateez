@@ -2,23 +2,73 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
-import { products, categories, type Product } from '@/data/products';
 import { useCart } from '@/context/CartContext';
+import { getProductsApi } from '@/lib/api/productApi';
+import type { Product as ApiProduct } from '@/lib/api/types';
+
+interface ProductView {
+    id: string;
+    name: string;
+    slug: string;
+    category: 'cookie' | 'energy-bar' | 'desert-date';
+    image: string;
+    rating: number;
+    reviews: number;
+    price: number;
+    originalPrice: number;
+    discount: string;
+    weight: string;
+}
 
 export default function ProductsSection() {
     const [activeCategory, setActiveCategory] = useState('all');
+    const [products, setProducts] = useState<ProductView[]>([]);
     const { addToCart } = useCart();
+
+    useEffect(() => {
+        async function loadProducts() {
+            try {
+                const response = await getProductsApi({ limit: 100 });
+                setProducts(response.items.map((p: ApiProduct) => ({
+                    id: p._id,
+                    name: p.name,
+                    slug: p.slug,
+                    category: p.category,
+                    image: p.image,
+                    rating: p.rating,
+                    reviews: p.reviews,
+                    price: p.price,
+                    originalPrice: p.originalPrice,
+                    discount: p.discount,
+                    weight: p.weight,
+                })));
+            } catch {
+                setProducts([]);
+            }
+        }
+
+        void loadProducts();
+    }, []);
+
+    const categories = [
+        { key: 'all', label: 'All' },
+        ...Array.from(new Set(products.map(p => p.category))).map(cat => ({
+            key: cat,
+            label: cat === 'energy-bar' ? 'Energy Bars' : cat === 'desert-date' ? 'Desert Dates' : 'Cookies',
+        })),
+    ];
 
     const filtered =
         activeCategory === 'all'
             ? products
             : products.filter(p => p.category === activeCategory);
 
-    const handleAddToCart = (product: Product) => {
+    const handleAddToCart = (product: ProductView) => {
         addToCart({
-            id: String(product.id),
+            id: product.id,
+            slug: product.slug,
             name: product.name,
             image: product.image,
             price: product.price,

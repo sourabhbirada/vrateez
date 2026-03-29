@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Star, ShoppingCart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw } from 'lucide-react';
-import { getProductBySlug, products as staticProducts } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { getProductBySlugApi, getProductsApi } from '@/lib/api/productApi';
 import type { Product as ApiProduct } from '@/lib/api/types';
@@ -32,13 +31,8 @@ interface ProductView {
 export default function ProductPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const staticProduct = getProductBySlug(slug);
-    const [product, setProduct] = useState<ProductView | null>(
-        staticProduct
-            ? { ...staticProduct }
-            : null
-    );
-    const [allProducts, setAllProducts] = useState<ProductView[]>(staticProducts);
+    const [product, setProduct] = useState<ProductView | null>(null);
+    const [allProducts, setAllProducts] = useState<ProductView[]>([]);
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
@@ -92,7 +86,8 @@ export default function ProductPage() {
                     }))
                 );
             } catch {
-                // Keep static fallback data.
+                setProduct(null);
+                setAllProducts([]);
             }
         }
 
@@ -114,6 +109,7 @@ export default function ProductPage() {
         for (let i = 0; i < quantity; i++) {
             addToCart({
                 id: String(product.id),
+                slug: product.slug,
                 name: product.name,
                 image: product.image,
                 price: product.price,

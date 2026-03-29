@@ -7,6 +7,7 @@ import type { Cart } from '@/lib/api/types';
 
 export interface CartItem {
     id: string;
+    slug?: string;
     name: string;
     image: string;
     price: number;
@@ -46,6 +47,7 @@ const isValidGuestItemId = (id: unknown): boolean => {
 const mapApiCart = (cart: Cart): CartItem[] => {
     return cart.items.map((it: Cart['items'][number]) => ({
         id: it.product._id,
+        slug: it.product.slug,
         name: it.product.name,
         image: it.product.image,
         price: it.product.price,

@@ -6,6 +6,7 @@ export async function createOrderApi(input: {
   shippingAddress: ShippingAddress;
   paymentMethod: "card" | "upi" | "netbanking" | "cod" | "razorpay";
   notes?: string;
+  couponCode?: string;
 }) {
   const res = await api.post<ApiResponse<{ order: Order }>>("/orders", input);
   return res.data.data.order;
@@ -28,6 +29,7 @@ export async function createGuestOrderApi(input: {
   paymentMethod: "card" | "upi" | "netbanking" | "cod" | "razorpay";
   guestInfo: GuestInfo;
   notes?: string;
+  couponCode?: string;
 }) {
   const res = await api.post<ApiResponse<{ order: Order }>>("/guest/orders", input);
   return res.data.data.order;

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ShoppingCart, Star } from 'lucide-react';
-import { products as staticProducts, categories } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { getProductsApi } from '@/lib/api/productApi';
 import type { Product as ApiProduct } from '@/lib/api/types';
@@ -31,8 +30,17 @@ function ShopContent() {
     const initialCategory = searchParams.get('category') || 'all';
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'rating'>('default');
-    const [allProducts, setAllProducts] = useState<ShopProduct[]>(staticProducts);
+    const [allProducts, setAllProducts] = useState<ShopProduct[]>([]);
+    const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
+
+    const categories = [
+        { key: 'all', label: 'All' },
+        ...Array.from(new Set(allProducts.map(p => p.category))).map(cat => ({
+            key: cat,
+            label: cat === 'energy-bar' ? 'Energy Bars' : cat === 'desert-date' ? 'Desert Dates' : 'Cookies',
+        })),
+    ];
 
     useEffect(() => {
         async function loadProducts() {
@@ -53,11 +61,11 @@ function ShopContent() {
                     weight: p.weight,
                     description: p.description,
                 }));
-                if (mapped.length > 0) {
-                    setAllProducts(mapped);
-                }
+                setAllProducts(mapped);
             } catch {
-                // Keep static fallback products if API is unavailable.
+                setAllProducts([]);
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -77,6 +85,7 @@ function ShopContent() {
     const handleAddToCart = (product: ShopProduct) => {
         addToCart({
             id: String(product.id),
+            slug: product.slug,
             name: product.name,
             image: product.image,
             price: product.price,
@@ -127,6 +136,10 @@ function ShopContent() {
                         <option value="rating">Highest Rated</option>
                     </select>
                 </div>
+
+                {loading && (
+                    <div className="text-center py-20 text-gray-500">Loading products...</div>
+                )}
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -191,7 +204,7 @@ function ShopContent() {
                     ))}
                 </div>
 
-                {filtered.length === 0 && (
+                {!loading && filtered.length === 0 && (
                     <div className="text-center py-20 text-gray-400">
                         <p className="text-xl mb-2">No products found in this category.</p>
                         <button onClick={() => setActiveCategory('all')} className="text-orange-500 font-semibold hover:underline">
