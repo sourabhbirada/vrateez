@@ -73,7 +73,7 @@ export default function NewLaunchesSection() {
                                     </div>
                                     <button
                                         onClick={() => addToCart({
-                                            id: product.id,
+                                            id: String(product.id),
                                             name: product.name,
                                             image: product.image,
                                             price: product.price,

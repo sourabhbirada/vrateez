@@ -76,7 +76,7 @@ function ShopContent() {
 
     const handleAddToCart = (product: ShopProduct) => {
         addToCart({
-            id: product.id,
+            id: String(product.id),
             name: product.name,
             image: product.image,
             price: product.price,

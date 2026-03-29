@@ -113,7 +113,7 @@ export default function ProductPage() {
     const handleAddToCart = () => {
         for (let i = 0; i < quantity; i++) {
             addToCart({
-                id: product.id,
+                id: String(product.id),
                 name: product.name,
                 image: product.image,
                 price: product.price,

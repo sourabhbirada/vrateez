@@ -18,7 +18,7 @@ export default function ProductsSection() {
 
     const handleAddToCart = (product: Product) => {
         addToCart({
-            id: product.id,
+            id: String(product.id),
             name: product.name,
             image: product.image,
             price: product.price,
