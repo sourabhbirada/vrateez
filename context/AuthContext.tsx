@@ -69,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthError(null);
         try {
             const data = await loginApi({ email, password });
-             console.log("dskjaf" , data)
             const normalizedUser: User = {
                 ...data.user,
                 id: data.user.id || data.user._id || '',
@@ -80,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsLoginOpen(false);
             return true;
         } catch (error: unknown) {
-            console.log(error)
             setAuthError(error instanceof Error ? error.message : 'Login failed');
             return false;
         } finally {

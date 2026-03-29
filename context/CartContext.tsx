@@ -39,6 +39,10 @@ const isValidObjectId = (id: unknown): boolean => {
     return /^[a-f\d]{24}$/i.test(id);
 };
 
+const isValidGuestItemId = (id: unknown): boolean => {
+    return typeof id === 'string' && id.trim().length > 0;
+};
+
 const mapApiCart = (cart: Cart): CartItem[] => {
     return cart.items.map((it: Cart['items'][number]) => ({
         id: it.product._id,
@@ -58,8 +62,8 @@ const validateLocalCart = (rawItems: unknown): CartItem[] => {
     return rawItems.filter((item): item is CartItem => {
         if (!item || typeof item !== 'object') return false;
 
-        // Must have valid MongoDB ObjectId
-        if (!isValidObjectId((item as CartItem).id)) {
+        // Guest cart can contain static product IDs and API IDs.
+        if (!isValidGuestItemId((item as CartItem).id)) {
             console.warn('Removing invalid cart item with ID:', (item as CartItem).id);
             return false;
         }
@@ -126,8 +130,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const toggleCart = useCallback(() => setIsOpen(prev => !prev), []);
 
     const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
-        // Validate item ID before adding
-        if (!isValidObjectId(item.id)) {
+        if (!isValidGuestItemId(item.id)) {
             console.error('Cannot add item with invalid ID:', item.id);
             return;
         }
@@ -135,6 +138,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const token = getToken();
 
         if (token) {
+            if (!isValidObjectId(item.id)) {
+                console.error('Cannot sync non-ObjectId cart item to API:', item.id);
+                return;
+            }
+
             void (async () => {
                 try {
                     const cart = await addCartItemApi({ productId: item.id, quantity: 1 });
