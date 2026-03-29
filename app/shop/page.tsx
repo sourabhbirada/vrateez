@@ -88,12 +88,12 @@ function ShopContent() {
     return (
         <main className="bg-white min-h-screen">
             {/* Header banner */}
-            <div className="bg-linear-to-r from-amber-100 to-orange-100 py-14 text-center">
+            {/* <div className="bg-linear-to-r from-amber-100 to-orange-100 py-14 text-center">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">Shop Vrateez</h1>
                 <p className="text-gray-600 max-w-xl mx-auto">
                     Protein cookies, energy bars &amp; superfood snacks — handcrafted for taste, engineered for nutrition.
                 </p>
-            </div>
+            </div> */}
 
             <div className="max-w-7xl mx-auto px-8 py-10">
                 {/* Filters row */}

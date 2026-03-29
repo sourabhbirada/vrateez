@@ -39,7 +39,7 @@ export default function HeroSection() {
     const [current, setCurrent] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
 
-    const DURATION = 7000;
+    const DURATION = 3500;
 
     const goTo = useCallback((idx: number) => {
         if (isAnimating) return;
@@ -82,7 +82,7 @@ export default function HeroSection() {
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
 
             {/* Navigation arrows */}
-            <button
+            {/* <button
                 onClick={prev}
                 className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-all hover:scale-110 flex items-center justify-center group"
                 aria-label="Previous slide"
@@ -95,7 +95,7 @@ export default function HeroSection() {
                 aria-label="Next slide"
             >
                 <ChevronRight size={20} className="text-white group-hover:text-white transition" />
-            </button>
+            </button> */}
 
             {/* Text content overlay */}
             <div className="relative z-10 h-full flex items-center">
@@ -140,7 +140,7 @@ export default function HeroSection() {
             </div>
 
             {/* Bottom dots */}
-            <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center gap-2.5">
+            {/* <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center gap-2.5">
                 {slides.map((s, i) => (
                     <button
                         key={i}
@@ -153,7 +153,7 @@ export default function HeroSection() {
                         aria-label={`Go to slide ${i + 1}`}
                     />
                 ))}
-            </div>
+            </div> */}
         </section>
     );
 }

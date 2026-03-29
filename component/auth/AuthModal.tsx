@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { X, Eye, EyeOff, Mail, Lock, UserIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -16,14 +15,12 @@ export default function AuthModal() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         clearError();
-
         let success = false;
         if (isSignup) {
             success = await signup(name, email, password);
         } else {
             success = await login(email, password);
         }
-
         if (!success) {
             return;
         }

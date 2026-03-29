@@ -48,7 +48,12 @@ export interface Cart {
 
 export interface Order {
   _id: string;
-  user: string;
+  user?: string;
+  guestInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
   items: Array<{
     product: string;
     name: string;
@@ -64,7 +69,7 @@ export interface Order {
     pincode: string;
     country: string;
   };
-  paymentMethod: "card" | "upi" | "netbanking" | "cod";
+  paymentMethod: "card" | "upi" | "netbanking" | "cod" | "razorpay";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   orderStatus: "placed" | "processing" | "shipped" | "delivered" | "cancelled";
   subtotal: number;
@@ -74,4 +79,45 @@ export interface Order {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GuestInfo {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface ShippingAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country?: string;
+}
+
+export interface PaymentIntent {
+  payment: {
+    _id: string;
+    paymentId: string;
+    razorpayOrderId?: string;
+    amount: number;
+    currency: string;
+    status: "created" | "success" | "failed";
+  };
+  // Stripe fields
+  clientSecret?: string;
+  stripePublishableKey?: string;
+  // Razorpay fields
+  razorpayOrderId?: string;
+  razorpayKeyId?: string;
+  // Common fields
+  amount: number;
+  currency: string;
+  provider: "stripe" | "razorpay" | "mock";
+  providers?: {
+    stripe: boolean;
+    razorpay: boolean;
+    mock: boolean;
+  };
 }

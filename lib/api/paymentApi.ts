@@ -1,21 +1,56 @@
 import api from "./axios";
-import type { ApiResponse, Order } from "./types";
+import type { ApiResponse, Order, PaymentIntent } from "./types";
 
-interface PaymentEntity {
-  _id: string;
-  paymentId: string;
-  transactionId?: string;
-  amount: number;
-  currency: string;
-  status: "created" | "success" | "failed";
+export type PaymentProvider = "stripe" | "razorpay";
+
+// For authenticated users
+export async function createPaymentIntentApi(orderId: string, provider: PaymentProvider = "stripe") {
+  const res = await api.post<ApiResponse<PaymentIntent>>("/payments/intent", { orderId, provider });
+  return res.data.data;
 }
 
-export async function createPaymentIntentApi(orderId: string) {
-  const res = await api.post<ApiResponse<{ payment: PaymentEntity }>>("/payments/intent", { orderId });
-  return res.data.data.payment;
+export async function verifyPaymentApi(input: {
+  orderId: string;
+  provider?: PaymentProvider;
+  // Razorpay fields
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  // Stripe fields
+  paymentIntentId?: string;
+}) {
+  const res = await api.post<ApiResponse<{ payment: PaymentIntent["payment"]; order: Order }>>("/payments/verify", input);
+  return res.data.data;
 }
 
+export async function confirmCodOrderApi(orderId: string) {
+  const res = await api.post<ApiResponse<{ order: Order }>>("/payments/confirm-cod", { orderId });
+  return res.data.data.order;
+}
+
+// Legacy mock payment confirmation
 export async function confirmPaymentApi(input: { paymentId: string; success?: boolean }) {
-  const res = await api.post<ApiResponse<{ payment: PaymentEntity; order: Order }>>("/payments/confirm", input);
+  const res = await api.post<ApiResponse<{ payment: PaymentIntent["payment"]; order: Order }>>("/payments/confirm", input);
+  return res.data.data;
+}
+
+// For guest users
+export async function createGuestPaymentApi(orderId: string, email: string, provider: PaymentProvider = "stripe") {
+  const res = await api.post<ApiResponse<PaymentIntent>>("/guest/payments/create", { orderId, email, provider });
+  return res.data.data;
+}
+
+export async function verifyGuestPaymentApi(input: {
+  orderId: string;
+  email: string;
+  provider?: PaymentProvider;
+  // Razorpay fields
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  // Stripe fields
+  paymentIntentId?: string;
+}) {
+  const res = await api.post<ApiResponse<{ payment: PaymentIntent["payment"]; order: Order }>>("/guest/payments/verify", input);
   return res.data.data;
 }

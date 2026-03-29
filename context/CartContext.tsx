@@ -6,7 +6,7 @@ import { getToken } from '@/lib/api/storage';
 import type { Cart } from '@/lib/api/types';
 
 export interface CartItem {
-    id: string | number;
+    id: string;
     name: string;
     image: string;
     price: number;
@@ -22,8 +22,8 @@ interface CartContextType {
     closeCart: () => void;
     toggleCart: () => void;
     addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-    removeFromCart: (id: string | number) => void;
-    updateQuantity: (id: string | number, quantity: number) => void;
+    removeFromCart: (id: string) => void;
+    updateQuantity: (id: string, quantity: number) => void;
     clearCart: () => void;
     totalItems: number;
     totalPrice: number;
@@ -32,6 +32,12 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const GUEST_CART_KEY = 'vrateez_guest_cart';
+
+// Helper to check if string is a valid MongoDB ObjectId format
+const isValidObjectId = (id: unknown): boolean => {
+    if (typeof id !== 'string') return false;
+    return /^[a-f\d]{24}$/i.test(id);
+};
 
 const mapApiCart = (cart: Cart): CartItem[] => {
     return cart.items.map((it: Cart['items'][number]) => ({
@@ -43,6 +49,28 @@ const mapApiCart = (cart: Cart): CartItem[] => {
         quantity: it.quantity,
         weight: it.product.weight,
     }));
+};
+
+// Filter and validate cart items from localStorage
+const validateLocalCart = (rawItems: unknown): CartItem[] => {
+    if (!Array.isArray(rawItems)) return [];
+
+    return rawItems.filter((item): item is CartItem => {
+        if (!item || typeof item !== 'object') return false;
+
+        // Must have valid MongoDB ObjectId
+        if (!isValidObjectId((item as CartItem).id)) {
+            console.warn('Removing invalid cart item with ID:', (item as CartItem).id);
+            return false;
+        }
+
+        // Must have required fields
+        return (
+            typeof (item as CartItem).name === 'string' &&
+            typeof (item as CartItem).price === 'number' &&
+            typeof (item as CartItem).quantity === 'number'
+        );
+    });
 };
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -68,8 +96,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const raw = localStorage.getItem(GUEST_CART_KEY);
             if (raw) {
                 try {
-                    setItems(JSON.parse(raw) as CartItem[]);
+                    const parsed = JSON.parse(raw);
+                    const validItems = validateLocalCart(parsed);
+                    setItems(validItems);
+
+                    // If some items were invalid, update localStorage
+                    if (validItems.length !== (parsed as unknown[]).length) {
+                        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(validItems));
+                    }
                 } catch {
+                    // Clear invalid localStorage data
+                    localStorage.removeItem(GUEST_CART_KEY);
                     setItems([]);
                 }
             }
@@ -89,13 +126,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const toggleCart = useCallback(() => setIsOpen(prev => !prev), []);
 
     const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
+        // Validate item ID before adding
+        if (!isValidObjectId(item.id)) {
+            console.error('Cannot add item with invalid ID:', item.id);
+            return;
+        }
+
         const token = getToken();
 
-        if (token && typeof item.id === 'string') {
+        if (token) {
             void (async () => {
                 try {
-                    const productId = item.id as string;
-                    const cart = await addCartItemApi({ productId, quantity: 1 });
+                    const cart = await addCartItemApi({ productId: item.id, quantity: 1 });
                     setItems(mapApiCart(cart));
                 } catch {
                     // Fallback to local cart behavior when API fails
@@ -126,10 +168,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsOpen(true);
     }, []);
 
-    const removeFromCart = useCallback((id: string | number) => {
+    const removeFromCart = useCallback((id: string) => {
         const token = getToken();
 
-        if (token && typeof id === 'string') {
+        if (token) {
             void (async () => {
                 try {
                     const cart = await removeCartItemApi(id);
@@ -144,10 +186,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems(prev => prev.filter(i => i.id !== id));
     }, []);
 
-    const updateQuantity = useCallback((id: string | number, quantity: number) => {
+    const updateQuantity = useCallback((id: string, quantity: number) => {
         const token = getToken();
 
-        if (token && typeof id === 'string') {
+        if (token) {
             void (async () => {
                 try {
                     const cart = await updateCartItemApi(id, quantity);
@@ -184,6 +226,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
 
         setItems([]);
+
+        // Also clear localStorage
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(GUEST_CART_KEY);
+        }
     }, []);
 
     const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);

@@ -42,9 +42,9 @@ export default function Header() {
         <>
             {/* Announcement bar */}
             <div className="bg-gray-900 text-white text-center text-xs py-2 font-medium tracking-wide">
-                <span className="hidden sm:inline">🚀 Free Shipping on orders above ₹499 | </span>
+                <span className="hidden lg:inline">🚀Free Shipping on orders above ₹499 | </span>
                 <Link href="/shop" className="underline underline-offset-2 hover:text-orange-400 transition">Shop Now</Link>
-                <span className="hidden sm:inline"> — Use code <strong>PROTEIN10</strong> for 10% off</span>
+                <span className="hidden lg:inline"> — Use code <strong>PROTEIN10</strong> for 10% off</span>
             </div>
 
             <header className="bg-[#E8DCC8]/95 backdrop-blur-md py-3 sticky top-0 z-30 border-b border-black/5">

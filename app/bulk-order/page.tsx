@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Send, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function BulkOrderPage() {
+    const BULK_ORDER_URL = process.env.NEXT_PUBLIC_BULK_ORDER_URL || 'http://localhost:3001/bulk-order';
     const [formData, setFormData] = useState({
         companyName: '',
         yourName: '',
@@ -14,14 +15,40 @@ export default function BulkOrderPage() {
         message: '',
     });
     const [submitted, setSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitted(true);
+        setIsSubmitting(true);
+        setSubmitError('');
+
+        try {
+            const response = await fetch(BULK_ORDER_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = (await response.json()) as { message?: string };
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Unable to submit your inquiry right now.');
+            }
+
+            setSubmitted(true);
+            setFormData({ companyName: '', yourName: '', phone: '', email: '', location: '', inquiryType: '', message: '' });
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -162,11 +189,14 @@ export default function BulkOrderPage() {
 
                                     <button
                                         type="submit"
+                                        disabled={isSubmitting}
                                         className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
                                     >
                                         <Send size={16} />
-                                        SUBMIT INQUIRY
+                                        {isSubmitting ? 'SUBMITTING...' : 'SUBMIT INQUIRY'}
                                     </button>
+
+                                    {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
                                 </form>
                             )}
                         </div>

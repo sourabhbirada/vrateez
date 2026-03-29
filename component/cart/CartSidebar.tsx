@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { X, Plus, Minus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
@@ -127,9 +128,13 @@ export default function CartSidebar() {
                         <p className="text-xs text-gray-400">
                             Shipping & taxes calculated at checkout
                         </p>
-                        <button className="w-full bg-orange-500 text-white py-4 rounded-full font-bold text-lg hover:bg-orange-600 transition">
+                        <Link
+                            href="/checkout"
+                            onClick={closeCart}
+                            className="w-full bg-orange-500 text-white py-4 rounded-full font-bold text-lg hover:bg-orange-600 transition block text-center"
+                        >
                             CHECKOUT — ₹{totalPrice}
-                        </button>
+                        </Link>
                         <button
                             onClick={clearCart}
                             className="w-full text-center text-sm text-gray-500 hover:text-red-500 transition"
