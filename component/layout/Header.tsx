@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, X, LogOut, ChevronDown, Sparkles } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
@@ -69,9 +69,8 @@ export default function Header() {
                         <Link href="/faq" className="text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-black/5 transition">
                             FAQ
                         </Link>
-                        <Link href="/#new-launches" className="text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-black/5 transition inline-flex items-center gap-1">
-                            <Sparkles size={14} className="text-orange-500" />
-                            NEW
+                        <Link href="/about-us" className="text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-black/5 transition">
+                            ABOUT US
                         </Link>
                     </nav>
 
@@ -167,9 +166,8 @@ export default function Header() {
                         <Link href="/faq" onClick={() => setMobileOpen(false)} className="text-gray-900 font-semibold py-3 px-3 rounded-lg hover:bg-black/5 transition">
                             FAQ
                         </Link>
-                        <Link href="/#new-launches" onClick={() => setMobileOpen(false)} className="text-gray-900 font-semibold py-3 px-3 rounded-lg hover:bg-black/5 transition inline-flex items-center gap-2">
-                            <Sparkles size={14} className="text-orange-500" />
-                            NEW LAUNCHES
+                        <Link href="/about-us" onClick={() => setMobileOpen(false)} className="text-gray-900 font-semibold py-3 px-3 rounded-lg hover:bg-black/5 transition">
+                            ABOUT US
                         </Link>
                     </nav>
                 )}

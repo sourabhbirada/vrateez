@@ -32,17 +32,7 @@ export default function Footer() {
                             </div>
                         </div>
 
-                        {/* Newsletter */}
-                        <div className="flex gap-2 mb-6">
-                            <input
-                                type="email"
-                                placeholder="Your email"
-                                className="flex-1 px-4 py-2.5 rounded-full text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white/90"
-                            />
-                            <button className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-full font-semibold text-sm transition">
-                                Subscribe
-                            </button>
-                        </div>
+                       
 
                         {/* Social */}
                         <div className="flex gap-3">
@@ -63,6 +53,7 @@ export default function Footer() {
                         </div>
                         <div>
                             <h4 className="font-bold text-xs uppercase mb-4 text-white/40 tracking-wider">Company</h4>
+                            <Link href="/about-us" className="block mb-2.5 hover:text-orange-400 transition text-sm text-white/70">About Us</Link>
                             <Link href="/bulk-order" className="block mb-2.5 hover:text-orange-400 transition text-sm text-white/70">Bulk Orders</Link>
                             <Link href="/faq" className="block mb-2.5 hover:text-orange-400 transition text-sm text-white/70">FAQ</Link>
                             <Link href="/contact" className="block mb-2.5 hover:text-orange-400 transition text-sm text-white/70">Contact</Link>
