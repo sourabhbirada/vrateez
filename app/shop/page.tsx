@@ -7,13 +7,14 @@ import { useSearchParams } from 'next/navigation';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { getProductsApi } from '@/lib/api/productApi';
-import type { Product as ApiProduct } from '@/lib/api/types';
+import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
+import { getProductCategoryLabel, normalizeProductCategory } from '@/lib/api/types';
 
 interface ShopProduct {
     id: string | number;
     name: string;
     slug: string;
-    category: 'cookie' | 'energy-bar' | 'desert-date';
+    category: ProductCategory;
     image: string;
     images: string[];
     rating: number;
@@ -27,7 +28,7 @@ interface ShopProduct {
 
 function ShopContent() {
     const searchParams = useSearchParams();
-    const initialCategory = searchParams.get('category') || 'all';
+    const initialCategory = normalizeProductCategory(searchParams.get('category') || 'all');
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'rating'>('default');
     const [allProducts, setAllProducts] = useState<ShopProduct[]>([]);
@@ -38,7 +39,7 @@ function ShopContent() {
         { key: 'all', label: 'All' },
         ...Array.from(new Set(allProducts.map(p => p.category))).map(cat => ({
             key: cat,
-            label: cat === 'energy-bar' ? 'Energy Bars' : cat === 'desert-date' ? 'Desert Dates' : 'Cookies',
+            label: getProductCategoryLabel(cat),
         })),
     ];
 

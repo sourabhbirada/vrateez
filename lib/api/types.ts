@@ -1,4 +1,32 @@
-export type ProductCategory = "cookie" | "energy-bar" | "desert-date";
+export type ProductCategory =
+  | "cookies"
+  | "infused-cookie"
+  | "energy-on-the-go"
+  | "savory-snacks"
+  | "wholesome-delights";
+
+export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
+  cookies: "Cookies",
+  "infused-cookie": "Infused Cookies",
+  "energy-on-the-go": "Energy on the Go",
+  "savory-snacks": "Savory Snacks",
+  "wholesome-delights": "Wholesome Delights",
+};
+
+const PRODUCT_CATEGORY_ALIASES: Record<string, ProductCategory> = {
+  cookie: "cookies",
+  "energy-bar": "energy-on-the-go",
+  "desert-date": "infused-cookie",
+};
+
+export function normalizeProductCategory(category: string): ProductCategory | string {
+  return PRODUCT_CATEGORY_ALIASES[category] ?? category;
+}
+
+export function getProductCategoryLabel(category: string): string {
+  const normalized = normalizeProductCategory(category);
+  return PRODUCT_CATEGORY_LABELS[normalized as ProductCategory] ?? category.replace(/-/g, " ");
+}
 
 export interface ApiResponse<T> {
   status: boolean;

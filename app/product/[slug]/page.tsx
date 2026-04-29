@@ -7,13 +7,14 @@ import { useParams } from 'next/navigation';
 import { Star, ShoppingCart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { getProductBySlugApi, getProductsApi } from '@/lib/api/productApi';
-import type { Product as ApiProduct } from '@/lib/api/types';
+import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
+import { getProductCategoryLabel } from '@/lib/api/types';
 
 interface ProductView {
     id: string | number;
     name: string;
     slug: string;
-    category: 'cookie' | 'energy-bar' | 'desert-date';
+    category: ProductCategory;
     image: string;
     images: string[];
     rating: number;
@@ -167,7 +168,7 @@ export default function ProductPage() {
                 {/* Info */}
                 <div>
                     <span className="inline-block bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase mb-3">
-                        {product.category.replace('-', ' ')}
+                        {getProductCategoryLabel(product.category)}
                     </span>
 
                     <h1 className="text-3xl font-extrabold text-gray-900 mb-2">{product.name}</h1>

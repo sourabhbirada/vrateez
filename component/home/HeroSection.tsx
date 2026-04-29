@@ -12,7 +12,7 @@ const slides = [
         title: 'Ancient Grains.\nModern Nutrition.',
         subtitle: 'Millet-based snacks crafted with Vedic wisdom and food science.',
         cta: 'SHOP COOKIES',
-        href: '/shop?category=cookie',
+        href: '/shop?category=cookies',
     },
     {
         image: '/virteez/Energy bar with packaging.jpeg',
@@ -20,7 +20,7 @@ const slides = [
         title: 'Energy That\nHonors You.',
         subtitle: 'Nut & seed bars designed to boost stamina — naturally.',
         cta: 'SHOP ENERGY BARS',
-        href: '/shop?category=energy-bar',
+        href: '/shop?category=energy-on-the-go',
     },
     {
         image: '/virteez/Assorted cookie box.jpeg',
@@ -33,11 +33,11 @@ const slides = [
 ];
 
 const CATEGORIES = [
-    { label: 'Cookies', href: '/shop?category=cookie' },
+    { label: 'Cookies', href: '/shop?category=cookies' },
     { label: 'Infused Cookies', href: '/shop?category=infused-cookie' },
-    { label: 'Energy on the Go', href: '/shop?category=energy-bar' },
-    { label: 'Savory Snacks', href: '/shop?category=savory' },
-    { label: 'Wholesome Delights', href: '/shop?category=wholesome' },
+    { label: 'Energy on the Go', href: '/shop?category=energy-on-the-go' },
+    { label: 'Savory Snacks', href: '/shop?category=savory-snacks' },
+    { label: 'Wholesome Delights', href: '/shop?category=wholesome-delights' },
 ];
 
 export default function HeroSection() {
@@ -64,12 +64,12 @@ export default function HeroSection() {
     const contentAnim = isAnimating ? 'opacity-0 translate-y-5' : 'opacity-100 translate-y-0';
 
     return (
-        <section className="relative w-full h-[88vh] min-h-[580px] max-h-[820px] overflow-hidden">
+        <section className="relative w-full h-[88vh] min-h-145 max-h-205 overflow-hidden">
             {/* Background image */}
             <div className={`absolute inset-0 transition-opacity duration-500 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
                 <Image src={slide.image} alt={slide.title} fill className="object-cover" priority sizes="100vw" />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+            <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/45 to-black/10" />
 
             {/* Content */}
             <div className="relative z-10 h-full flex flex-col justify-between">
@@ -106,14 +106,14 @@ export default function HeroSection() {
                 <div className="bg-black/40 backdrop-blur-md border-t border-white/10">
                     <div className="max-w-7xl mx-auto px-8 md:px-16">
                         <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
-                            <span className="text-[10px] font-bold tracking-[0.2em] text-white/35 uppercase mr-3 flex-shrink-0">
+                            <span className="text-[10px] font-bold tracking-[0.2em] text-white/35 uppercase mr-3 shrink-0">
                                 Categories
                             </span>
                             {CATEGORIES.map((cat) => (
                                 <Link
                                     key={cat.label}
                                     href={cat.href}
-                                    className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold text-white/65 hover:text-white hover:bg-white/10 border border-white/10 hover:border-white/25 transition"
+                                    className="shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold text-white/65 hover:text-white hover:bg-white/10 border border-white/10 hover:border-white/25 transition"
                                 >
                                     {cat.label}
                                 </Link>

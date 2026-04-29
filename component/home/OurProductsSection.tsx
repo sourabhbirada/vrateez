@@ -8,13 +8,13 @@ const categories = [
         image: '/virteez/Blueberry cookies.jpeg',
         label: 'Cookies',
         desc: 'Almond · Coconut · Walnut · Cashew',
-        href: '/shop?category=cookie',
+        href: '/shop?category=cookies',
     },
     {
         image: '/virteez/Energy bar closeup.jpeg',
         label: 'Energy on the Go',
         desc: 'Energy Bar · Energy Booster',
-        href: '/shop?category=energy-bar',
+        href: '/shop?category=energy-on-the-go',
     },
     {
         image: '/virteez/Desert dates drops.jpeg',
@@ -26,13 +26,13 @@ const categories = [
         image: '/virteez/Almond cookies in plate.jpeg',
         label: 'Savory Snacks',
         desc: 'Makhana · Crunchy Bites · Falahaari Chips',
-        href: '/shop?category=savory',
+        href: '/shop?category=savory-snacks',
     },
     {
         image: '/virteez/Cashew cookies in plate along with box.jpeg',
         label: 'Wholesome Delights',
         desc: 'Instant Sama Upma',
-        href: '/shop?category=wholesome',
+        href: '/shop?category=wholesome-delights',
     },
 ];
 
@@ -47,7 +47,7 @@ const features = [
 
 export default function OurProductsSection() {
     return (
-        <section className="py-20 bg-gradient-to-b from-amber-50/60 to-stone-50">
+        <section className="py-20 bg-linear-to-b from-amber-50/60 to-stone-50">
             <div className="max-w-7xl mx-auto px-8">
 
                 {/* Header */}
@@ -108,7 +108,7 @@ function CategoryCard({ cat }: { cat: typeof categories[0] }) {
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5">
                 <p className="text-white font-bold text-lg leading-tight mb-1">{cat.label}</p>
                 <p className="text-white/60 text-xs">{cat.desc}</p>

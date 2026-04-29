@@ -6,13 +6,14 @@ import { useEffect, useState } from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { getProductsApi } from '@/lib/api/productApi';
-import type { Product as ApiProduct } from '@/lib/api/types';
+import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
+import { getProductCategoryLabel } from '@/lib/api/types';
 
 interface ProductView {
     id: string;
     name: string;
     slug: string;
-    category: 'cookie' | 'energy-bar' | 'desert-date';
+    category: ProductCategory;
     image: string;
     rating: number;
     reviews: number;
@@ -56,7 +57,7 @@ export default function ProductsSection() {
         { key: 'all', label: 'All' },
         ...Array.from(new Set(products.map(p => p.category))).map(cat => ({
             key: cat,
-            label: cat === 'energy-bar' ? 'Energy Bars' : cat === 'desert-date' ? 'Desert Dates' : 'Cookies',
+            label: getProductCategoryLabel(cat),
         })),
     ];
 

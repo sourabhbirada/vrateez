@@ -4,7 +4,7 @@ import { Instagram, Facebook, Twitter, MapPin, Phone, Mail } from 'lucide-react'
 export default function Footer() {
     return (
         <footer className="bg-[#2D1B14] text-white py-16 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-amber-600/60 to-transparent" />
 
             <div className="max-w-7xl mx-auto px-8 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
@@ -20,15 +20,15 @@ export default function Footer() {
 
                         <div className="space-y-2.5 mb-7">
                             <div className="flex items-center gap-2.5 text-sm text-white/60">
-                                <MapPin size={14} className="text-amber-500 flex-shrink-0" />
+                                <MapPin size={14} className="text-amber-500 shrink-0" />
                                 <span>Jaipur, Rajasthan, India</span>
                             </div>
                             <div className="flex items-center gap-2.5 text-sm text-white/60">
-                                <Phone size={14} className="text-amber-500 flex-shrink-0" />
+                                <Phone size={14} className="text-amber-500 shrink-0" />
                                 <a href="tel:+919407230914" className="hover:text-amber-400 transition">+91 9407230914</a>
                             </div>
                             <div className="flex items-center gap-2.5 text-sm text-white/60">
-                                <Mail size={14} className="text-amber-500 flex-shrink-0" />
+                                <Mail size={14} className="text-amber-500 shrink-0" />
                                 <a href="mailto:support@vrateez.com" className="hover:text-amber-400 transition">support@vrateez.com</a>
                             </div>
                         </div>
@@ -51,10 +51,11 @@ export default function Footer() {
                         <div>
                             <h4 className="font-bold text-[10px] uppercase mb-4 text-white/35 tracking-[0.2em]">Shop</h4>
                             <Link href="/shop" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">All Products</Link>
-                            <Link href="/shop?category=cookie" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Cookies</Link>
-                            <Link href="/shop?category=energy-bar" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Energy Bars</Link>
-                            <Link href="/shop?category=savory" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Savory Snacks</Link>
-                            <Link href="/shop?category=wholesome" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Wholesome Delights</Link>
+                            <Link href="/shop?category=cookies" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Cookies</Link>
+                            <Link href="/shop?category=infused-cookie" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Infused Cookies</Link>
+                            <Link href="/shop?category=energy-on-the-go" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Energy on the Go</Link>
+                            <Link href="/shop?category=savory-snacks" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Savory Snacks</Link>
+                            <Link href="/shop?category=wholesome-delights" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Wholesome Delights</Link>
                         </div>
                         <div>
                             <h4 className="font-bold text-[10px] uppercase mb-4 text-white/35 tracking-[0.2em]">Company</h4>
