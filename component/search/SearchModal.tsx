@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, X } from 'lucide-react';
+import { Search, X, ArrowUpRight } from 'lucide-react';
 import { getProductsApi } from '@/lib/api/productApi';
 import type { Product } from '@/lib/api/types';
 
@@ -12,39 +12,30 @@ interface SearchModalProps {
     onClose: () => void;
 }
 
+const QUICK_TAGS = ['Cookies', 'Energy Bar', 'Almond', 'Blueberry', 'Millet', 'Vrat'];
+
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const [query, setQuery] = useState('');
     const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        async function loadProducts() {
-            try {
-                const response = await getProductsApi({ limit: 100 });
-                setProducts(response.items);
-            } catch {
-                setProducts([]);
-            }
-        }
-
-        if (isOpen) {
-            void loadProducts();
-        }
+        if (!isOpen) return;
+        setLoading(true);
+        getProductsApi({ limit: 100 })
+            .then(res => setProducts(res.items))
+            .catch(() => setProducts([]))
+            .finally(() => setLoading(false));
     }, [isOpen]);
 
     useEffect(() => {
-        if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100);
-        } else {
-            setQuery('');
-        }
+        if (isOpen) setTimeout(() => inputRef.current?.focus(), 80);
+        else setQuery('');
     }, [isOpen]);
 
-    // Close on Escape
     useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, [onClose]);
@@ -59,66 +50,103 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         )
         : [];
 
+    const hasQuery = query.trim().length > 0;
+
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={onClose} />
-            <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-20 px-4">
-                <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                    {/* Search input */}
-                    <div className="flex items-center gap-3 px-6 py-4 border-b">
-                        <Search size={20} className="text-gray-400 flex-shrink-0" />
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black/25 backdrop-blur-sm z-50" onClick={onClose} />
+
+            {/* Modal */}
+            <div className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-16 md:pt-24">
+                <div
+                    className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden"
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Input row */}
+                    <div className="flex items-center gap-3 px-4 py-3.5 border-b border-stone-100">
+                        <Search size={17} className="text-stone-400 flex-shrink-0" />
                         <input
                             ref={inputRef}
                             type="text"
                             value={query}
                             onChange={e => setQuery(e.target.value)}
-                            placeholder="Search cookies, energy bars, dates..."
-                            className="flex-1 text-base outline-none placeholder:text-gray-400"
+                            placeholder="Search products..."
+                            className="flex-1 text-sm text-stone-900 placeholder:text-stone-400 bg-transparent outline-none"
                         />
-                        {query && (
-                            <button onClick={() => setQuery('')} className="text-gray-400 hover:text-gray-600">
-                                <X size={18} />
+                        <div className="flex items-center gap-2">
+                            {hasQuery && (
+                                <button
+                                    onClick={() => setQuery('')}
+                                    className="p-1 rounded-md hover:bg-stone-100 text-stone-400 transition"
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="text-[11px] text-stone-400 border border-stone-200 rounded px-1.5 py-0.5 hover:bg-stone-50 transition"
+                            >
+                                ESC
                             </button>
-                        )}
-                        <button
-                            onClick={onClose}
-                            className="text-xs text-gray-400 border border-gray-200 px-2 py-1 rounded-md"
-                        >
-                            ESC
-                        </button>
+                        </div>
                     </div>
 
-                    {/* Results */}
-                    <div className="max-h-[400px] overflow-y-auto">
-                        {query.trim().length === 0 ? (
-                            <div className="px-6 py-8 text-center text-gray-400 text-sm">
-                                <p>Start typing to search our products...</p>
-                                <div className="flex justify-center gap-2 mt-4">
-                                    {['Cookies', 'Energy Bar', 'Almond', 'Blueberry'].map(tag => (
+                    {/* Body */}
+                    <div className="max-h-[420px] overflow-y-auto">
+
+                        {/* Empty state — quick tags */}
+                        {!hasQuery && (
+                            <div className="px-5 py-5">
+                                <p className="text-[11px] font-semibold tracking-widest text-stone-400 uppercase mb-3">
+                                    Quick search
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {QUICK_TAGS.map(tag => (
                                         <button
                                             key={tag}
                                             onClick={() => setQuery(tag)}
-                                            className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 transition"
+                                            className="px-3.5 py-1.5 bg-stone-100 hover:bg-amber-100 hover:text-amber-800 text-stone-600 text-xs font-medium rounded-full transition"
                                         >
                                             {tag}
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                        ) : results.length === 0 ? (
-                            <div className="px-6 py-8 text-center text-gray-400 text-sm">
-                                No products found for &quot;{query}&quot;
+                        )}
+
+                        {/* Loading */}
+                        {hasQuery && loading && (
+                            <div className="px-5 py-8 text-center text-sm text-stone-400">
+                                Searching...
                             </div>
-                        ) : (
+                        )}
+
+                        {/* No results */}
+                        {hasQuery && !loading && results.length === 0 && (
+                            <div className="px-5 py-10 text-center">
+                                <p className="text-sm text-stone-500">
+                                    No products found for <span className="font-semibold text-stone-700">"{query}"</span>
+                                </p>
+                                <p className="text-xs text-stone-400 mt-1">Try a different keyword</p>
+                            </div>
+                        )}
+
+                        {/* Results */}
+                        {hasQuery && !loading && results.length > 0 && (
                             <div className="p-2">
+                                <p className="text-[11px] font-semibold tracking-widest text-stone-400 uppercase px-3 pt-2 pb-3">
+                                    {results.length} result{results.length !== 1 ? 's' : ''}
+                                </p>
                                 {results.map(product => (
                                     <Link
                                         key={product._id}
                                         href={`/product/${product.slug}`}
                                         onClick={onClose}
-                                        className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-gray-50 transition"
+                                        className="flex items-center gap-4 px-3 py-3 rounded-xl hover:bg-stone-50 transition group"
                                     >
-                                        <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                        {/* Image */}
+                                        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-100">
                                             <Image
                                                 src={product.image}
                                                 alt={product.name}
@@ -126,13 +154,27 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                                 className="object-cover"
                                             />
                                         </div>
+
+                                        {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-bold text-gray-900 truncate">{product.name}</h4>
-                                            <p className="text-xs text-gray-500 capitalize">{product.category.replace('-', ' ')} · {product.weight}</p>
+                                            <p className="text-sm font-semibold text-stone-900 truncate">{product.name}</p>
+                                            <p className="text-xs text-stone-400 mt-0.5 capitalize">
+                                                {product.category.replace('-', ' ')} · {product.weight}
+                                            </p>
                                         </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <span className="text-sm font-bold text-gray-900">₹{product.price}</span>
-                                            <span className="block text-xs text-green-600 font-semibold">{product.discount}</span>
+
+                                        {/* Price */}
+                                        <div className="text-right flex-shrink-0 flex items-center gap-2">
+                                            <div>
+                                                <p className="text-sm font-bold text-stone-900">₹{product.price}</p>
+                                                {product.discount && (
+                                                    <p className="text-xs text-green-600 font-medium">{product.discount}</p>
+                                                )}
+                                            </div>
+                                            <ArrowUpRight
+                                                size={15}
+                                                className="text-stone-300 group-hover:text-amber-600 transition-colors"
+                                            />
                                         </div>
                                     </Link>
                                 ))}

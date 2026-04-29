@@ -3,18 +3,29 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CreditCard, Truck, CheckCircle, Loader2 } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import {
+    ArrowLeft,
+    Building2,
+    CheckCircle,
+    CircleDollarSign,
+    CreditCard,
+    Loader2,
+    Smartphone,
+    Truck,
+    Wallet,
+} from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { createOrderApi, createGuestOrderApi, confirmGuestCodOrderApi } from '@/lib/api/orderApi';
 import { createPaymentIntentApi, verifyPaymentApi, confirmCodOrderApi, createGuestPaymentApi, verifyGuestPaymentApi } from '@/lib/api/paymentApi';
 import { validateCouponApi } from '@/lib/api/couponApi';
 import { getProductsApi } from '@/lib/api/productApi';
+import { openRazorpayCheckout } from '@/lib/razorpay';
 import type { ShippingAddress, GuestInfo, Order } from '@/lib/api/types';
 
-type PaymentMethod = 'stripe' | 'cod';
+type PaymentMethod = 'card' | 'upi' | 'netbanking' | 'wallet' | 'paylater' | 'cod';
+
+type OrderPaymentMethod = 'card' | 'upi' | 'netbanking' | 'razorpay' | 'cod';
 
 const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
 
@@ -26,24 +37,75 @@ const normalizeText = (value: string): string =>
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
 
-// Stripe Elements options
-const cardElementOptions = {
-    style: {
-        base: {
-            fontSize: '16px',
-            color: '#424770',
-            '::placeholder': {
-                color: '#aab7c4',
-            },
-            padding: '12px',
-        },
-        invalid: {
-            color: '#9e2146',
-        },
+const PAYMENT_METHODS: Array<{
+    id: PaymentMethod;
+    label: string;
+    description: string;
+    icon: typeof CreditCard;
+}> = [
+    {
+        id: 'upi',
+        label: 'UPI',
+        description: 'Google Pay, PhonePe, Paytm and more',
+        icon: Smartphone,
     },
+    {
+        id: 'card',
+        label: 'Card',
+        description: 'Visa, Mastercard, Rupay, Amex',
+        icon: CreditCard,
+    },
+    {
+        id: 'netbanking',
+        label: 'Net Banking',
+        description: 'All major Indian banks',
+        icon: Building2,
+    },
+    {
+        id: 'wallet',
+        label: 'Wallet',
+        description: 'Mobikwik, Freecharge and more',
+        icon: Wallet,
+    },
+    {
+        id: 'paylater',
+        label: 'Pay Later / EMI',
+        description: 'EMI and buy-now-pay-later options',
+        icon: CircleDollarSign,
+    },
+    {
+        id: 'cod',
+        label: 'Cash on Delivery',
+        description: 'Pay when your order arrives',
+        icon: Truck,
+    },
+];
+
+const toOrderPaymentMethod = (method: PaymentMethod): OrderPaymentMethod => {
+    if (method === 'cod') return 'cod';
+    if (method === 'card') return 'card';
+    if (method === 'upi') return 'upi';
+    if (method === 'netbanking') return 'netbanking';
+    return 'razorpay';
 };
 
-// Inner checkout form that uses Stripe hooks
+const getRazorpayMethodPreference = (method: PaymentMethod) => {
+    switch (method) {
+        case 'card':
+            return { card: true };
+        case 'upi':
+            return { upi: true };
+        case 'netbanking':
+            return { netbanking: true };
+        case 'wallet':
+            return { wallet: true };
+        case 'paylater':
+            return { paylater: true, emi: true };
+        default:
+            return undefined;
+    }
+};
+
 function CheckoutForm({
     items,
     totalPrice,
@@ -56,8 +118,6 @@ function CheckoutForm({
     user: ReturnType<typeof useAuth>['user'];
 }) {
     const router = useRouter();
-    const stripe = useStripe();
-    const elements = useElements();
 
     const [isLoading, setIsLoading] = useState(false);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
@@ -69,14 +129,12 @@ function CheckoutForm({
         description: string;
     } | null>(null);
 
-    // Guest info (only shown if not logged in)
     const [guestInfo, setGuestInfo] = useState<GuestInfo>({
         name: '',
         email: '',
         phone: '',
     });
 
-    // Shipping address
     const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
         line1: '',
         line2: '',
@@ -86,10 +144,8 @@ function CheckoutForm({
         country: 'India',
     });
 
-    // Payment method
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
 
-    // Calculate totals
     const subtotal = totalPrice;
     const shippingCharge = subtotal >= 499 ? 0 : 49;
     const discountAmount = appliedCoupon?.discountAmount || 0;
@@ -124,7 +180,6 @@ function CheckoutForm({
     };
 
     const validateForm = (): boolean => {
-        // Validate guest info if not logged in
         if (!user) {
             if (!guestInfo.name.trim()) {
                 setError('Please enter your name');
@@ -140,7 +195,6 @@ function CheckoutForm({
             }
         }
 
-        // Validate shipping address
         if (!shippingAddress.line1.trim()) {
             setError('Please enter your address');
             return false;
@@ -161,6 +215,60 @@ function CheckoutForm({
         return true;
     };
 
+    const resolveGuestOrderItems = async (): Promise<Array<{ productId: string; quantity: number }>> => {
+        const needsResolution = items.some(item => !isObjectId(item.id));
+
+        if (!needsResolution) {
+            return items.map(item => ({
+                productId: item.id,
+                quantity: item.quantity,
+            }));
+        }
+
+        const response = await getProductsApi({ limit: 100 });
+        const apiProducts = response.items;
+        if (!apiProducts.length) {
+            throw new Error('Product catalog is temporarily unavailable. Please refresh and try again in a few seconds.');
+        }
+        const apiBySlug = new Map(apiProducts.map(p => [p.slug, p]));
+
+        return items.map(item => {
+            if (isObjectId(item.id)) {
+                return {
+                    productId: item.id,
+                    quantity: item.quantity,
+                };
+            }
+
+            let matchedProduct = item.slug ? apiBySlug.get(item.slug) : undefined;
+
+            if (!matchedProduct) {
+                const normalizedItemName = normalizeText(item.name);
+                const nameMatches = apiProducts.filter(p => normalizeText(p.name) === normalizedItemName);
+                matchedProduct = nameMatches.find(p => p.price === item.price) || nameMatches[0];
+            }
+
+            if (!matchedProduct) {
+                const normalizedItemName = normalizeText(item.name);
+                const looseNameMatches = apiProducts.filter(
+                    p =>
+                        normalizeText(p.name).includes(normalizedItemName) ||
+                        normalizedItemName.includes(normalizeText(p.name)),
+                );
+                matchedProduct = looseNameMatches.find(p => p.price === item.price) || looseNameMatches[0];
+            }
+
+            if (!matchedProduct) {
+                throw new Error(`Product "${item.name}" is outdated in cart. Please remove it and add again.`);
+            }
+
+            return {
+                productId: matchedProduct._id,
+                quantity: item.quantity,
+            };
+        });
+    };
+
     const handlePlaceOrder = async () => {
         setError(null);
 
@@ -170,173 +278,85 @@ function CheckoutForm({
 
         try {
             let order: Order;
+            const orderPaymentMethod = toOrderPaymentMethod(paymentMethod);
 
-            const resolveGuestOrderItems = async (): Promise<Array<{ productId: string; quantity: number }>> => {
-                const needsResolution = items.some(item => !isObjectId(item.id));
-
-                if (!needsResolution) {
-                    return items.map(item => ({
-                        productId: item.id,
-                        quantity: item.quantity,
-                    }));
-                }
-
-                const response = await getProductsApi({ limit: 100 });
-                const apiProducts = response.items;
-                if (!apiProducts.length) {
-                    throw new Error('Product catalog is temporarily unavailable. Please refresh and try again in a few seconds.');
-                }
-                const apiBySlug = new Map(apiProducts.map(p => [p.slug, p]));
-
-                return items.map(item => {
-                    if (isObjectId(item.id)) {
-                        return {
-                            productId: item.id,
-                            quantity: item.quantity,
-                        };
-                    }
-
-                    // Prefer slug-based matching when available.
-                    let matchedProduct = item.slug ? apiBySlug.get(item.slug) : undefined;
-
-                    if (!matchedProduct) {
-                        const normalizedItemName = normalizeText(item.name);
-                        const nameMatches = apiProducts.filter(p => normalizeText(p.name) === normalizedItemName);
-                        matchedProduct = nameMatches.find(p => p.price === item.price) || nameMatches[0];
-                    }
-
-                    if (!matchedProduct) {
-                        const normalizedItemName = normalizeText(item.name);
-                        const looseNameMatches = apiProducts.filter(
-                            p =>
-                                normalizeText(p.name).includes(normalizedItemName) ||
-                                normalizedItemName.includes(normalizeText(p.name)),
-                        );
-                        matchedProduct = looseNameMatches.find(p => p.price === item.price) || looseNameMatches[0];
-                    }
-
-                    if (!matchedProduct) {
-                        throw new Error(
-                            `Product \"${item.name}\" is outdated in cart. Please remove it and add again.`,
-                        );
-                    }
-
-                    return {
-                        productId: matchedProduct._id,
-                        quantity: item.quantity,
-                    };
-                });
-            };
-
-            // Create order
             if (user) {
-                // Authenticated user
                 order = await createOrderApi({
                     shippingAddress,
-                    paymentMethod: paymentMethod === 'stripe' ? 'card' : 'cod',
+                    paymentMethod: orderPaymentMethod,
                     couponCode: appliedCoupon?.couponCode,
                 });
             } else {
-                // Guest user
                 const guestItems = await resolveGuestOrderItems();
                 order = await createGuestOrderApi({
                     items: guestItems,
                     shippingAddress,
-                    paymentMethod: paymentMethod === 'stripe' ? 'card' : 'cod',
+                    paymentMethod: orderPaymentMethod,
                     guestInfo,
                     couponCode: appliedCoupon?.couponCode,
                 });
             }
 
-            // Handle payment
             if (paymentMethod === 'cod') {
-                // COD - just confirm and redirect
                 if (user) {
                     await confirmCodOrderApi(order._id);
                 } else {
                     await confirmGuestCodOrderApi(order._id, guestInfo.email);
                 }
+
                 clearCart();
                 router.push(`/order-success?orderId=${order._id}&email=${encodeURIComponent(guestInfo.email || user?.email || '')}`);
-            } else {
-                // Stripe payment
-                let paymentIntent;
-                if (user) {
-                    paymentIntent = await createPaymentIntentApi(order._id, 'stripe');
-                } else {
-                    paymentIntent = await createGuestPaymentApi(order._id, guestInfo.email, 'stripe');
-                }
-
-                if (!stripe || !elements) {
-                    throw new Error('Stripe payment form is still loading. Please wait a moment and try again.');
-                }
-
-                // Check if Stripe is configured
-                if (paymentIntent.provider === 'stripe' && paymentIntent.clientSecret && stripe && elements) {
-                    const cardElement = elements.getElement(CardElement);
-
-                    if (!cardElement) {
-                        throw new Error('Card element not found');
-                    }
-
-                    const { error: stripeError, paymentIntent: confirmedPayment } = await stripe.confirmCardPayment(
-                        paymentIntent.clientSecret,
-                        {
-                            payment_method: {
-                                card: cardElement,
-                                billing_details: {
-                                    name: user?.name || guestInfo.name,
-                                    email: user?.email || guestInfo.email,
-                                },
-                            },
-                        }
-                    );
-
-                    if (stripeError) {
-                        throw new Error(stripeError.message || 'Payment failed');
-                    }
-
-                    if (confirmedPayment?.status === 'succeeded') {
-                        // Verify payment on backend
-                        if (user) {
-                            await verifyPaymentApi({
-                                orderId: order._id,
-                                provider: 'stripe',
-                                paymentIntentId: confirmedPayment.id,
-                            });
-                        } else {
-                            await verifyGuestPaymentApi({
-                                orderId: order._id,
-                                email: guestInfo.email,
-                                provider: 'stripe',
-                                paymentIntentId: confirmedPayment.id,
-                            });
-                        }
-                        clearCart();
-                        router.push(`/order-success?orderId=${order._id}&email=${encodeURIComponent(guestInfo.email || user?.email || '')}`);
-                    }
-                } else {
-                    // Mock payment (for testing when Stripe not configured)
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-
-                    if (user) {
-                        await verifyPaymentApi({
-                            orderId: order._id,
-                            provider: 'stripe',
-                            paymentIntentId: paymentIntent.payment.paymentId,
-                        });
-                    } else {
-                        await verifyGuestPaymentApi({
-                            orderId: order._id,
-                            email: guestInfo.email,
-                            provider: 'stripe',
-                            paymentIntentId: paymentIntent.payment.paymentId,
-                        });
-                    }
-                    clearCart();
-                    router.push(`/order-success?orderId=${order._id}&email=${encodeURIComponent(guestInfo.email || user?.email || '')}`);
-                }
+                return;
             }
+
+            const paymentIntent = user
+                ? await createPaymentIntentApi(order._id, 'razorpay')
+                : await createGuestPaymentApi(order._id, guestInfo.email, 'razorpay');
+
+            if (paymentIntent.provider === 'razorpay' && paymentIntent.razorpayOrderId && paymentIntent.razorpayKeyId) {
+                const response = await openRazorpayCheckout({
+                    key: paymentIntent.razorpayKeyId,
+                    amount: paymentIntent.amount,
+                    currency: paymentIntent.currency,
+                    name: 'Vrateez',
+                    description: `Order #${order._id.slice(-6).toUpperCase()}`,
+                    order_id: paymentIntent.razorpayOrderId,
+                    method: getRazorpayMethodPreference(paymentMethod),
+                    prefill: {
+                        name: user?.name || guestInfo.name,
+                        email: user?.email || guestInfo.email,
+                        contact: guestInfo.phone,
+                    },
+                    theme: {
+                        color: '#1d4ed8',
+                    },
+                    handler: () => {},
+                });
+
+                if (user) {
+                    await verifyPaymentApi({
+                        orderId: order._id,
+                        provider: 'razorpay',
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpaySignature: response.razorpay_signature,
+                    });
+                } else {
+                    await verifyGuestPaymentApi({
+                        orderId: order._id,
+                        email: guestInfo.email,
+                        provider: 'razorpay',
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpaySignature: response.razorpay_signature,
+                    });
+                }
+            } else {
+                throw new Error('Online payment is currently unavailable. Please try Cash on Delivery or contact support.');
+            }
+
+            clearCart();
+            router.push(`/order-success?orderId=${order._id}&email=${encodeURIComponent(guestInfo.email || user?.email || '')}`);
         } catch (err) {
             console.error('Checkout error:', err);
             setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -347,9 +367,7 @@ function CheckoutForm({
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Forms */}
             <div className="lg:col-span-2 space-y-6">
-                {/* Guest Info (only if not logged in) */}
                 {!user && (
                     <div className="bg-white rounded-2xl p-6 shadow-sm">
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Contact Information</h2>
@@ -396,7 +414,6 @@ function CheckoutForm({
                     </div>
                 )}
 
-                {/* Shipping Address */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping Address</h2>
                     <div className="space-y-4">
@@ -466,83 +483,46 @@ function CheckoutForm({
                     </div>
                 </div>
 
-                {/* Payment Method */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Payment Method</h2>
-                    <div className="space-y-3">
-                        <label
-                            className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition ${
-                                paymentMethod === 'stripe'
-                                    ? 'border-orange-500 bg-orange-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                        >
-                            <input
-                                type="radio"
-                                name="paymentMethod"
-                                value="stripe"
-                                checked={paymentMethod === 'stripe'}
-                                onChange={() => setPaymentMethod('stripe')}
-                                className="w-5 h-5 text-orange-500"
-                            />
-                            <CreditCard size={24} className={paymentMethod === 'stripe' ? 'text-orange-500' : 'text-gray-400'} />
-                            <div>
-                                <p className="font-semibold text-gray-900">Pay Online (Stripe)</p>
-                                <p className="text-sm text-gray-500">Credit/Debit Card</p>
-                            </div>
-                        </label>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Payment Options</h2>
+                    <p className="text-sm text-gray-500 mb-4">All payment methods are processed securely via Razorpay. No PayPal option is shown.</p>
 
-                        <label
-                            className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition ${
-                                paymentMethod === 'cod'
-                                    ? 'border-orange-500 bg-orange-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                        >
-                            <input
-                                type="radio"
-                                name="paymentMethod"
-                                value="cod"
-                                checked={paymentMethod === 'cod'}
-                                onChange={() => setPaymentMethod('cod')}
-                                className="w-5 h-5 text-orange-500"
-                            />
-                            <Truck size={24} className={paymentMethod === 'cod' ? 'text-orange-500' : 'text-gray-400'} />
-                            <div>
-                                <p className="font-semibold text-gray-900">Cash on Delivery</p>
-                                <p className="text-sm text-gray-500">Pay when you receive</p>
-                            </div>
-                        </label>
+                    <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                        {PAYMENT_METHODS.map((method) => {
+                            const Icon = method.icon;
+                            const selected = paymentMethod === method.id;
+
+                            return (
+                                <label
+                                    key={method.id}
+                                    className={`flex items-center gap-4 p-4 cursor-pointer transition border-b border-gray-100 last:border-b-0 ${
+                                        selected ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value={method.id}
+                                        checked={selected}
+                                        onChange={() => setPaymentMethod(method.id)}
+                                        className="h-5 w-5 text-blue-600"
+                                    />
+                                    <Icon size={21} className={selected ? 'text-blue-700' : 'text-gray-500'} />
+                                    <div>
+                                        <p className="font-semibold text-gray-900 leading-tight">{method.label}</p>
+                                        <p className="text-sm text-gray-500">{method.description}</p>
+                                    </div>
+                                </label>
+                            );
+                        })}
                     </div>
-
-                    {/* Stripe Card Element */}
-                    {paymentMethod === 'stripe' && (
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Card Details
-                            </label>
-                            <div className="border border-gray-300 rounded-lg p-4 bg-white">
-                                <CardElement options={cardElementOptions} />
-                            </div>
-                            <p className="text-xs text-gray-500 mt-2">
-                                Test card: 4242 4242 4242 4242, any future date, any CVC
-                            </p>
-                            {!stripe && (
-                                <p className="text-xs text-orange-600 mt-2">
-                                    Loading Stripe secure card form...
-                                </p>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {/* Right Column - Order Summary */}
             <div className="lg:col-span-1">
                 <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-8">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
 
-                    {/* Items */}
                     <div className="space-y-4 max-h-64 overflow-y-auto mb-4">
                         {items.map((item) => (
                             <div key={item.id} className="flex gap-3">
@@ -565,7 +545,6 @@ function CheckoutForm({
                         ))}
                     </div>
 
-                    {/* Totals */}
                     <div className="border-t pt-4 space-y-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Coupon Code</label>
@@ -629,14 +608,12 @@ function CheckoutForm({
                         </div>
                     </div>
 
-                    {/* Error Message */}
                     {error && (
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                             {error}
                         </div>
                     )}
 
-                    {/* Place Order Button */}
                     <button
                         onClick={handlePlaceOrder}
                         disabled={isLoading}
@@ -655,7 +632,6 @@ function CheckoutForm({
                         )}
                     </button>
 
-                    {/* Security Note */}
                     <p className="text-xs text-gray-400 text-center mt-4">
                         Your payment information is secure and encrypted
                     </p>
@@ -665,22 +641,11 @@ function CheckoutForm({
     );
 }
 
-// Main checkout page with Stripe Elements wrapper
 export default function CheckoutPage() {
     const router = useRouter();
     const { items, totalPrice, clearCart } = useCart();
     const { user } = useAuth();
-    const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
 
-    // Initialize Stripe with publishable key
-    useEffect(() => {
-        const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-        if (publishableKey) {
-            setStripePromise(loadStripe(publishableKey));
-        }
-    }, []);
-
-    // Redirect if cart is empty
     useEffect(() => {
         if (items.length === 0) {
             router.push('/shop');
@@ -694,7 +659,6 @@ export default function CheckoutPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-6xl mx-auto px-4">
-                {/* Header */}
                 <div className="mb-8">
                     <button
                         onClick={() => router.back()}
@@ -706,15 +670,12 @@ export default function CheckoutPage() {
                     <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
                 </div>
 
-                {/* Checkout Form wrapped in Stripe Elements */}
-                <Elements stripe={stripePromise}>
-                    <CheckoutForm
-                        items={items}
-                        totalPrice={totalPrice}
-                        clearCart={clearCart}
-                        user={user}
-                    />
-                </Elements>
+                <CheckoutForm
+                    items={items}
+                    totalPrice={totalPrice}
+                    clearCart={clearCart}
+                    user={user}
+                />
             </div>
         </div>
     );

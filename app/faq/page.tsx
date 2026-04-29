@@ -211,7 +211,7 @@ export default function FaqPage() {
                             EMAIL US
                         </a>
                         <a
-                            href="https://wa.me/919079086630"
+                            href="https://wa.me/919407230914"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-green-500 text-white px-8 py-3 rounded-full font-bold text-sm hover:bg-green-600 transition"

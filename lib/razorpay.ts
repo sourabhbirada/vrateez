@@ -11,6 +11,14 @@ export interface RazorpayOptions {
   name: string;
   description?: string;
   order_id: string;
+  method?: {
+    card?: boolean;
+    upi?: boolean;
+    netbanking?: boolean;
+    wallet?: boolean;
+    paylater?: boolean;
+    emi?: boolean;
+  };
   handler: (response: RazorpayResponse) => void;
   prefill?: {
     name?: string;
@@ -69,7 +77,7 @@ export function loadRazorpayScript(): Promise<void> {
   return razorpayScriptLoading;
 }
 
-export async function openRazorpayCheckout(options: RazorpayOptions): Promise<void> {
+export async function openRazorpayCheckout(options: RazorpayOptions): Promise<RazorpayResponse> {
   await loadRazorpayScript();
 
   return new Promise((resolve, reject) => {
@@ -77,7 +85,7 @@ export async function openRazorpayCheckout(options: RazorpayOptions): Promise<vo
       ...options,
       handler: (response) => {
         options.handler(response);
-        resolve();
+        resolve(response);
       },
       modal: {
         ...options.modal,
@@ -89,19 +97,5 @@ export async function openRazorpayCheckout(options: RazorpayOptions): Promise<vo
     });
 
     razorpay.open();
-  });
-}
-
-// Mock payment for testing when Razorpay is not configured
-export function mockPayment(orderId: string): Promise<RazorpayResponse> {
-  return new Promise((resolve) => {
-    // Simulate payment delay
-    setTimeout(() => {
-      resolve({
-        razorpay_payment_id: `pay_mock_${Date.now()}`,
-        razorpay_order_id: orderId,
-        razorpay_signature: `sig_mock_${Date.now()}`,
-      });
-    }, 1500);
   });
 }

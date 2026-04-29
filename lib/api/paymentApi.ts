@@ -1,10 +1,10 @@
 import api from "./axios";
 import type { ApiResponse, Order, PaymentIntent } from "./types";
 
-export type PaymentProvider = "stripe" | "razorpay";
+export type PaymentProvider = "razorpay";
 
 // For authenticated users
-export async function createPaymentIntentApi(orderId: string, provider: PaymentProvider = "stripe") {
+export async function createPaymentIntentApi(orderId: string, provider: PaymentProvider = "razorpay") {
   const res = await api.post<ApiResponse<PaymentIntent>>("/payments/intent", { orderId, provider });
   return res.data.data;
 }
@@ -35,7 +35,7 @@ export async function confirmPaymentApi(input: { paymentId: string; success?: bo
 }
 
 // For guest users
-export async function createGuestPaymentApi(orderId: string, email: string, provider: PaymentProvider = "stripe") {
+export async function createGuestPaymentApi(orderId: string, email: string, provider: PaymentProvider = "razorpay") {
   const res = await api.post<ApiResponse<PaymentIntent>>("/guest/payments/create", { orderId, email, provider });
   return res.data.data;
 }

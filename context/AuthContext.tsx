@@ -30,7 +30,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(() => getStoredUser<User>());
+    const [user, setUser] = useState<User | null>(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isSignup, setIsSignup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);

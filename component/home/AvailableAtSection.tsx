@@ -1,10 +1,7 @@
 export default function AvailableAtSection() {
     const partners = [
         { name: 'amazon', style: 'text-2xl font-bold text-gray-900 italic' },
-        { name: 'Flipkart', style: 'text-xl font-bold text-[#047BD5]' },
         { name: 'zepto', style: 'bg-[#8B1874] text-white px-5 py-2.5 text-base font-bold rounded-xl' },
-        { name: 'HealthKart', style: 'text-lg font-bold text-[#00A699]' },
-        { name: "Nature's Basket", style: 'text-lg font-semibold text-gray-700' },
         { name: 'Blinkit', style: 'bg-yellow-400 text-gray-900 px-5 py-2.5 text-base font-bold rounded-xl' },
     ];
 
@@ -14,8 +11,7 @@ export default function AvailableAtSection() {
                 {/* Message */}
                 <div className="text-center mb-6">
                     <p className="text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                        At Vrateez, we believe you shouldn&apos;t have to choose between tasty and healthy.
-                        Our nutritionist-approved snacks prove you can have the best of both worlds.
+                        In today's busy life, finding food that is healthy, pure, and ready to eat instantly feels like a difficult balance. Vrateez walks beside you — crafted for every moment, built on tradition, backed by science
                     </p>
                 </div>
 

@@ -3,43 +3,46 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const slides = [
     {
         image: '/virteez/All three infused cookies.jpeg',
-        title: 'Protein-Packed Cookies',
-        subtitle: 'Taste the goodness. Fuel the grind.',
-        tagline: '10g Protein  •  No Added Sugar  •  Real Ingredients',
+        tag: 'Vrat Friendly · Clean Label',
+        title: 'Ancient Grains.\nModern Nutrition.',
+        subtitle: 'Millet-based snacks crafted with Vedic wisdom and food science.',
         cta: 'SHOP COOKIES',
         href: '/shop?category=cookie',
-        accent: 'from-orange-500 to-amber-500',
     },
     {
         image: '/virteez/Energy bar with packaging.jpeg',
-        title: 'Energy Bars That Deliver',
-        subtitle: '21g protein per bar. Zero guilt.',
-        tagline: 'Grass-Fed Whey  •  No Artificial Sweeteners',
-        cta: 'SHOP BARS',
+        tag: 'No Palm Oil · No Onion · No Garlic',
+        title: 'Energy That\nHonors You.',
+        subtitle: 'Nut & seed bars designed to boost stamina — naturally.',
+        cta: 'SHOP ENERGY BARS',
         href: '/shop?category=energy-bar',
-        accent: 'from-emerald-500 to-teal-500',
     },
     {
         image: '/virteez/Assorted cookie box.jpeg',
-        title: 'Gift the Goodness',
-        subtitle: 'Assorted boxes for every occasion.',
-        tagline: 'Perfect Gift  •  All Flavours  •  Premium Quality',
-        cta: 'SHOP GIFTS',
-        href: '/product/assorted-cookie-box',
-        accent: 'from-rose-500 to-pink-500',
+        tag: 'Gluten Free · Science Backed',
+        title: 'Pure. Honest.\nNourishing.',
+        subtitle: 'Every ingredient chosen for health. Every product made with trust.',
+        cta: 'EXPLORE ALL',
+        href: '/shop',
     },
+];
+
+const CATEGORIES = [
+    { label: 'Cookies', href: '/shop?category=cookie' },
+    { label: 'Infused Cookies', href: '/shop?category=infused-cookie' },
+    { label: 'Energy on the Go', href: '/shop?category=energy-bar' },
+    { label: 'Savory Snacks', href: '/shop?category=savory' },
+    { label: 'Wholesome Delights', href: '/shop?category=wholesome' },
 ];
 
 export default function HeroSection() {
     const [current, setCurrent] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
-
-    const DURATION = 3500;
 
     const goTo = useCallback((idx: number) => {
         if (isAnimating) return;
@@ -47,113 +50,90 @@ export default function HeroSection() {
         setTimeout(() => {
             setCurrent(idx);
             setTimeout(() => setIsAnimating(false), 50);
-        }, 400);
+        }, 350);
     }, [isAnimating]);
 
-    const prev = () => goTo((current - 1 + slides.length) % slides.length);
     const next = useCallback(() => goTo((current + 1) % slides.length), [current, goTo]);
 
     useEffect(() => {
-        const timer = setInterval(() => next(), DURATION);
+        const timer = setInterval(next, 4000);
         return () => clearInterval(timer);
     }, [next]);
 
     const slide = slides[current];
-
-    const contentAnim = isAnimating
-        ? 'opacity-0 translate-y-6'
-        : 'opacity-100 translate-y-0';
+    const contentAnim = isAnimating ? 'opacity-0 translate-y-5' : 'opacity-100 translate-y-0';
 
     return (
-        <section className="relative w-full h-[85vh] min-h-[550px] max-h-[800px] overflow-hidden">
-            {/* Full-screen background image */}
+        <section className="relative w-full h-[88vh] min-h-[580px] max-h-[820px] overflow-hidden">
+            {/* Background image */}
             <div className={`absolute inset-0 transition-opacity duration-500 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-                <Image
-                    src={slide.image}
-                    alt={slide.title}
-                    fill
-                    className="object-cover"
-                    priority
-                    sizes="100vw"
-                />
+                <Image src={slide.image} alt={slide.title} fill className="object-cover" priority sizes="100vw" />
             </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
 
-            {/* Dark overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
-
-            {/* Navigation arrows */}
-            {/* <button
-                onClick={prev}
-                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-all hover:scale-110 flex items-center justify-center group"
-                aria-label="Previous slide"
-            >
-                <ChevronLeft size={20} className="text-white group-hover:text-white transition" />
-            </button>
-            <button
-                onClick={() => goTo((current + 1) % slides.length)}
-                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-all hover:scale-110 flex items-center justify-center group"
-                aria-label="Next slide"
-            >
-                <ChevronRight size={20} className="text-white group-hover:text-white transition" />
-            </button> */}
-
-            {/* Text content overlay */}
-            <div className="relative z-10 h-full flex items-center">
-                <div className="max-w-7xl mx-auto w-full px-8 md:px-16">
-                    <div className={`max-w-xl transition-all duration-500 ease-out ${contentAnim}`}>
-                        {/* Category pill */}
-                        <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
-                            <span className={`w-2 h-2 rounded-full bg-gradient-to-r ${slide.accent}`} />
-                            <span className="text-xs font-bold text-white/90 uppercase tracking-wider">New Collection</span>
+            {/* Content */}
+            <div className="relative z-10 h-full flex flex-col justify-between">
+                {/* Main text */}
+                <div className="flex-1 flex items-center">
+                    <div className="max-w-7xl mx-auto w-full px-8 md:px-16">
+                        <div className={`max-w-lg transition-all duration-500 ease-out ${contentAnim}`}>
+                            <span className="inline-block text-[11px] font-semibold tracking-[0.2em] text-amber-400 uppercase mb-5">
+                                {slide.tag}
+                            </span>
+                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.08] mb-5 tracking-tight whitespace-pre-line">
+                                {slide.title}
+                            </h1>
+                            <p className="text-base md:text-lg text-white/70 mb-8 leading-relaxed max-w-sm">
+                                {slide.subtitle}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <Link
+                                    href={slide.href}
+                                    className="inline-flex items-center gap-2.5 bg-amber-600 hover:bg-amber-500 text-white px-7 py-3.5 rounded-full font-bold text-sm transition-all duration-200 hover:scale-[1.03] shadow-lg"
+                                >
+                                    {slide.cta}
+                                    <ArrowRight size={15} />
+                                </Link>
+                                <Link href="/shop" className="text-white/60 hover:text-white text-sm font-medium transition flex items-center gap-1.5">
+                                    View all products <ArrowRight size={13} />
+                                </Link>
+                            </div>
                         </div>
+                    </div>
+                </div>
 
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-5 tracking-tight">
-                            {slide.title}
-                        </h1>
-
-                        <p className="text-lg md:text-xl text-white/80 font-medium mb-3">
-                            {slide.subtitle}
-                        </p>
-
-                        <p className="text-sm text-white/50 tracking-wide mb-8 font-medium">
-                            {slide.tagline}
-                        </p>
-
-                        <div className="flex flex-wrap items-center gap-4">
-                            <Link
-                                href={slide.href}
-                                className={`inline-flex items-center gap-2.5 bg-gradient-to-r ${slide.accent} text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200`}
-                            >
-                                {slide.cta}
-                                <ArrowRight size={16} />
-                            </Link>
-                            <Link
-                                href="/shop"
-                                className="inline-flex items-center gap-2 text-white/70 hover:text-white font-semibold text-sm transition px-4 py-4"
-                            >
-                                View all products
-                                <ArrowRight size={14} />
-                            </Link>
+                {/* Category strip at bottom */}
+                <div className="bg-black/40 backdrop-blur-md border-t border-white/10">
+                    <div className="max-w-7xl mx-auto px-8 md:px-16">
+                        <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
+                            <span className="text-[10px] font-bold tracking-[0.2em] text-white/35 uppercase mr-3 flex-shrink-0">
+                                Categories
+                            </span>
+                            {CATEGORIES.map((cat) => (
+                                <Link
+                                    key={cat.label}
+                                    href={cat.href}
+                                    className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold text-white/65 hover:text-white hover:bg-white/10 border border-white/10 hover:border-white/25 transition"
+                                >
+                                    {cat.label}
+                                </Link>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Bottom dots */}
-            {/* <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center gap-2.5">
-                {slides.map((s, i) => (
+            {/* Slide dots */}
+            <div className="absolute bottom-14 right-8 md:right-16 z-10 flex gap-2">
+                {slides.map((_, i) => (
                     <button
                         key={i}
                         onClick={() => goTo(i)}
-                        className={`h-2.5 rounded-full transition-all duration-300 ${
-                            i === current
-                                ? `bg-gradient-to-r ${s.accent} w-8 shadow-sm`
-                                : 'bg-white/40 w-2.5 hover:bg-white/60'
-                        }`}
-                        aria-label={`Go to slide ${i + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? 'bg-amber-400 w-6' : 'bg-white/30 w-1.5 hover:bg-white/50'}`}
+                        aria-label={`Slide ${i + 1}`}
                     />
                 ))}
-            </div> */}
+            </div>
         </section>
     );
 }
