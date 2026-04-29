@@ -127,7 +127,7 @@ const faqs: Record<string, { question: string; answer: string }[]> = {
         },
         {
             question: 'What is your return policy?',
-            answer: 'We accept returns within 7 days of delivery if the product is damaged or defective. Since these are food products, we cannot accept returns for change of mind. Please contact us at support@vrateez.com with photos of any issues and we\'ll resolve it quickly.',
+            answer: 'We accept returns within 7 days of delivery if the product is damaged or defective. Since these are food products, we cannot accept returns for change of mind. Please contact us at vrateezfoodspvtltd@gmail.com with photos of any issues and we\'ll resolve it quickly.',
         },
         {
             question: 'Can I track my order?',

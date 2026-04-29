@@ -223,8 +223,8 @@ export default function BulkOrderPage() {
                                     </a>
                                 </ContactRow>
                                 <ContactRow icon={<Mail size={15} className="text-amber-400" />} label="Email">
-                                    <a href="mailto:support@vrateez.com" className="text-sm text-white hover:text-amber-400 transition">
-                                        support@vrateez.com
+                                    <a href="mailto:vrateezfoodspvtltd@gmail.com" className="text-sm text-white hover:text-amber-400 transition">
+                                        vrateezfoodspvtltd@gmail.com
                                     </a>
                                 </ContactRow>
                                 <ContactRow icon={<MapPin size={15} className="text-amber-400" />} label="Address">

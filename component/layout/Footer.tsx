@@ -29,7 +29,7 @@ export default function Footer() {
                             </div>
                             <div className="flex items-center gap-2.5 text-sm text-white/60">
                                 <Mail size={14} className="text-amber-500 shrink-0" />
-                                <a href="mailto:support@vrateez.com" className="hover:text-amber-400 transition">support@vrateez.com</a>
+                                <a href="mailto:vrateezfoodspvtltd@gmail.com" className="hover:text-amber-400 transition">vrateezfoodspvtltd@gmail.com</a>
                             </div>
                         </div>
 

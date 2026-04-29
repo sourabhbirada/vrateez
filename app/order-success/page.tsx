@@ -209,8 +209,8 @@ function OrderSuccessContent() {
                 {/* Help Text */}
                 <p className="text-center text-sm text-gray-500 mt-8">
                     Questions about your order? Contact us at{' '}
-                    <a href="mailto:support@vrateez.com" className="text-orange-500 hover:underline">
-                        support@vrateez.com
+                    <a href="mailto:vrateezfoodspvtltd@gmail.com" className="text-orange-500 hover:underline">
+                        vrateezfoodspvtltd@gmail.com
                     </a>
                 </p>
             </div>
