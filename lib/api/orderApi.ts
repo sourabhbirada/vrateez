@@ -7,6 +7,7 @@ export async function createOrderApi(input: {
   paymentMethod: "card" | "upi" | "netbanking" | "cod" | "razorpay";
   notes?: string;
   couponCode?: string;
+  contactPhone?: string;
 }) {
   const res = await api.post<ApiResponse<{ order: Order }>>("/orders", input);
   return res.data.data.order;

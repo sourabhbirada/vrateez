@@ -9,6 +9,7 @@ interface User {
     id: string;
     name: string;
     email: string;
+    phone?: string;
     role?: 'customer' | 'admin';
 }
 
@@ -22,7 +23,7 @@ interface AuthContextType {
     openSignup: () => void;
     closeAuth: () => void;
     login: (email: string, password: string) => Promise<boolean>;
-    signup: (name: string, email: string, password: string) => Promise<boolean>;
+    signup: (name: string, email: string, password: string, phone?: string) => Promise<boolean>;
     clearError: () => void;
     logout: () => void;
 }
@@ -44,8 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 const me = await meApi();
                 const normalizedUser: User = {
-                    ...me,
                     id: me.id || me._id || '',
+                    name: me.name,
+                    email: me.email,
+                    phone: me.phone,
+                    role: me.role,
                 };
                 setUser(normalizedUser);
                 setStoredUser(normalizedUser);
@@ -70,8 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const data = await loginApi({ email, password });
             const normalizedUser: User = {
-                ...data.user,
                 id: data.user.id || data.user._id || '',
+                name: data.user.name,
+                email: data.user.email,
+                phone: data.user.phone,
+                role: data.user.role,
             };
             setToken(data.token);
             setStoredUser(normalizedUser);
@@ -86,14 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const signup = useCallback(async (name: string, email: string, password: string) => {
+    const signup = useCallback(async (name: string, email: string, password: string, phone?: string) => {
         setIsLoading(true);
         setAuthError(null);
         try {
-            const data = await registerApi({ name, email, password });
+            const data = await registerApi({ name, email, password, phone: phone?.trim() || undefined });
             const normalizedUser: User = {
-                ...data.user,
                 id: data.user.id || data.user._id || '',
+                name: data.user.name,
+                email: data.user.email,
+                phone: data.user.phone,
+                role: data.user.role,
             };
             setToken(data.token);
             setStoredUser(normalizedUser);

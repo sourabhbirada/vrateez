@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Package, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { CheckCircle, Package, Mail, Phone, MapPin, ArrowRight, Truck } from 'lucide-react';
 import { getOrderByIdApi, getGuestOrderApi } from '@/lib/api/orderApi';
 import { useAuth } from '@/context/AuthContext';
 import type { Order } from '@/lib/api/types';
@@ -78,7 +78,9 @@ function OrderSuccessContent() {
                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle size={48} className="text-green-500" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        {order.paymentStatus === 'paid' ? 'Payment successful!' : 'Order confirmed!'}
+                    </h1>
                     <p className="text-gray-600">
                         Thank you for your order. We&apos;ll send you a confirmation email shortly.
                     </p>
@@ -135,7 +137,7 @@ function OrderSuccessContent() {
                         </p>
                     </div>
 
-                    {/* Contact Info (for guest orders) */}
+                    {/* Contact Info (guest) */}
                     {order.guestInfo && (
                         <div className="px-6 py-4 border-b">
                             <h3 className="font-semibold text-gray-900 mb-3">Contact Information</h3>
@@ -152,6 +154,70 @@ function OrderSuccessContent() {
                                     {order.guestInfo.phone}
                                 </p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Contact on file (account orders) */}
+                    {!order.guestInfo && order.contactPhone && (
+                        <div className="px-6 py-4 border-b">
+                            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <Phone size={18} />
+                                Contact on order
+                            </h3>
+                            <p className="text-gray-700 font-medium">+91 {order.contactPhone}</p>
+                            <p className="text-xs text-gray-500 mt-1">Used for Razorpay and delivery updates.</p>
+                        </div>
+                    )}
+
+                    {/* Tracking */}
+                    {(order.trackingNumber || order.courierPartner || (order.trackingEvents && order.trackingEvents.length > 0)) && (
+                        <div className="px-6 py-4 border-b bg-slate-50/80">
+                            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <Truck size={18} />
+                                Tracking
+                            </h3>
+                            <div className="space-y-2 text-sm text-gray-700">
+                                {order.courierPartner ? (
+                                    <p>
+                                        <span className="text-gray-500">Courier:</span> {order.courierPartner}
+                                    </p>
+                                ) : null}
+                                {order.trackingNumber ? (
+                                    <p className="font-mono text-xs">
+                                        <span className="text-gray-500 font-sans">AWB / ID:</span> {order.trackingNumber}
+                                    </p>
+                                ) : null}
+                                {order.estimatedDeliveryAt ? (
+                                    <p className="text-xs text-gray-600">
+                                        Est. delivery:{' '}
+                                        {new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(
+                                            new Date(order.estimatedDeliveryAt),
+                                        )}
+                                    </p>
+                                ) : null}
+                            </div>
+                            {order.trackingEvents && order.trackingEvents.length > 0 && (
+                                <ol className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                                    {order.trackingEvents.map((ev, idx) => (
+                                        <li key={`${ev.createdAt}-${idx}`} className="flex gap-3 text-sm">
+                                            <span className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 shrink-0" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{ev.title}</p>
+                                                {ev.note ? <p className="text-gray-600 text-xs mt-0.5">{ev.note}</p> : null}
+                                                {ev.location ? (
+                                                    <p className="text-xs text-gray-500 mt-0.5">{ev.location}</p>
+                                                ) : null}
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {new Intl.DateTimeFormat('en-IN', {
+                                                        dateStyle: 'medium',
+                                                        timeStyle: 'short',
+                                                    }).format(new Date(ev.createdAt))}
+                                                </p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
                         </div>
                     )}
 
@@ -197,6 +263,14 @@ function OrderSuccessContent() {
 
                 {/* Actions */}
                 <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                    {user && (
+                        <Link
+                            href="/account/orders"
+                            className="inline-flex items-center justify-center gap-2 border border-gray-200 bg-white text-gray-900 px-8 py-3 rounded-full font-semibold hover:bg-gray-50 transition"
+                        >
+                            All my orders
+                        </Link>
+                    )}
                     <Link
                         href="/shop"
                         className="inline-flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-600 transition"

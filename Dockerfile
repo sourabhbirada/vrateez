@@ -18,7 +18,6 @@ ENV NODE_ENV=production
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend/ ./
-COPY cms/public/virteez ./public/virteez
 
 RUN npm run build
 

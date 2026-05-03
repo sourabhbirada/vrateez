@@ -7,7 +7,11 @@ export interface CouponValidationData {
   description: string;
 }
 
-export async function validateCouponApi(input: { couponCode: string; subtotal: number }) {
+export async function validateCouponApi(input: {
+  couponCode: string;
+  subtotal: number;
+  shippingCharge?: number;
+}) {
   const res = await api.post<ApiResponse<CouponValidationData>>("/coupons/validate", input);
   return res.data.data;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, LogOut, ChevronDown, Package } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
@@ -116,7 +116,18 @@ export default function Header() {
                                             <div className="px-4 py-3 border-b border-gray-100">
                                                 <p className="text-sm font-bold text-gray-900">{user.name}</p>
                                                 <p className="text-xs text-gray-500">{user.email}</p>
+                                                {user.phone ? (
+                                                    <p className="text-xs text-gray-600 mt-1">+91 {user.phone}</p>
+                                                ) : null}
                                             </div>
+                                            <Link
+                                                href="/account/orders"
+                                                onClick={() => setUserMenuOpen(false)}
+                                                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-800 hover:bg-gray-50 transition border-b border-gray-100"
+                                            >
+                                                <Package size={16} />
+                                                My orders
+                                            </Link>
                                             <button
                                                 onClick={() => { logout(); setUserMenuOpen(false); }}
                                                 className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition"
@@ -169,6 +180,11 @@ export default function Header() {
                         <Link href="/about-us" onClick={() => setMobileOpen(false)} className="text-gray-900 font-semibold py-3 px-3 rounded-lg hover:bg-black/5 transition">
                             ABOUT US
                         </Link>
+                        {user && (
+                            <Link href="/account/orders" onClick={() => setMobileOpen(false)} className="text-gray-900 font-semibold py-3 px-3 rounded-lg hover:bg-black/5 transition">
+                                MY ORDERS
+                            </Link>
+                        )}
                     </nav>
                 )}
             </header>

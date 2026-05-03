@@ -25,7 +25,7 @@ const WHY_PARTNER = [
 ];
 
 export default function BulkOrderPage() {
-    const BULK_ORDER_URL = process.env.NEXT_PUBLIC_BULK_ORDER_URL || 'http://localhost:3001/bulk-order';
+    const BULK_ORDER_URL = process.env.NEXT_PUBLIC_BULK_ORDER_URL || '/bulk-order';
 
     const [formData, setFormData] = useState({
         companyName: '',
@@ -78,7 +78,7 @@ export default function BulkOrderPage() {
                         fill
                         className="object-cover opacity-20"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-stone-900/95 via-stone-900/80 to-stone-900/60" />
+                    <div className="absolute inset-0 bg-linear-to-r from-stone-900/95 via-stone-900/80 to-stone-900/60" />
                 </div>
 
                 <div className="relative max-w-5xl mx-auto">
@@ -242,7 +242,7 @@ export default function BulkOrderPage() {
                             <ul className="space-y-2.5">
                                 {WHY_PARTNER.map((item) => (
                                     <li key={item} className="flex items-start gap-2.5 text-sm text-stone-700">
-                                        <span className="text-amber-600 font-bold mt-0.5 flex-shrink-0">✓</span>
+                                        <span className="text-amber-600 font-bold mt-0.5 shrink-0">✓</span>
                                         {item}
                                     </li>
                                 ))}
@@ -270,7 +270,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ContactRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
     return (
         <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex-shrink-0">{icon}</div>
+            <div className="mt-0.5 shrink-0">{icon}</div>
             <div>
                 <p className="text-[10px] text-stone-400 uppercase font-semibold tracking-wider mb-0.5">{label}</p>
                 {children}

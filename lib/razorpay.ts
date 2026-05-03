@@ -44,6 +44,20 @@ export interface RazorpayInstance {
   close: () => void;
 }
 
+/** User closed the Razorpay checkout without completing payment */
+export class PaymentCancelledError extends Error {
+  readonly name = 'PaymentCancelledError';
+
+  constructor() {
+    super('Payment cancelled');
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export function isPaymentCancelledError(err: unknown): err is PaymentCancelledError {
+  return err instanceof PaymentCancelledError;
+}
+
 let razorpayScriptLoaded = false;
 let razorpayScriptLoading: Promise<void> | null = null;
 
@@ -91,7 +105,7 @@ export async function openRazorpayCheckout(options: RazorpayOptions): Promise<Ra
         ...options.modal,
         ondismiss: () => {
           options.modal?.ondismiss?.();
-          reject(new Error("Payment cancelled by user"));
+          reject(new PaymentCancelledError());
         },
       },
     });

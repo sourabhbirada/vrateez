@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { X, Eye, EyeOff, Mail, Lock, UserIcon } from 'lucide-react';
+import { X, Eye, EyeOff, Mail, Lock, UserIcon, Phone } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AuthModal() {
@@ -8,6 +8,7 @@ export default function AuthModal() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     if (!isLoginOpen) return null;
@@ -17,7 +18,7 @@ export default function AuthModal() {
         clearError();
         let success = false;
         if (isSignup) {
-            success = await signup(name, email, password);
+            success = await signup(name, email, password, phone.trim() || undefined);
         } else {
             success = await login(email, password);
         }
@@ -28,6 +29,7 @@ export default function AuthModal() {
         setName('');
         setEmail('');
         setPassword('');
+        setPhone('');
     };
 
     return (
@@ -59,20 +61,35 @@ export default function AuthModal() {
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
                         {isSignup && (
-                            <div>
-                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Full Name</label>
-                                <div className="relative mt-1">
-                                    <UserIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={name}
-                                        onChange={e => setName(e.target.value)}
-                                        placeholder="John Doe"
-                                        required
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
-                                    />
+                            <>
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Full Name</label>
+                                    <div className="relative mt-1">
+                                        <UserIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            placeholder="John Doe"
+                                            required
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mobile (optional)</label>
+                                    <div className="relative mt-1">
+                                        <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <input
+                                            type="tel"
+                                            value={phone}
+                                            onChange={e => setPhone(e.target.value)}
+                                            placeholder="9876543210 — for orders & Razorpay"
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+                                        />
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         <div>

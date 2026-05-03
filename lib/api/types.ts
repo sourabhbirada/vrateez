@@ -39,6 +39,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role?: "customer" | "admin";
 }
 
@@ -106,6 +107,17 @@ export interface Order {
   shippingCharge: number;
   totalAmount: number;
   notes?: string;
+  contactPhone?: string;
+  trackingNumber?: string;
+  courierPartner?: string;
+  estimatedDeliveryAt?: string;
+  trackingEvents?: Array<{
+    status: string;
+    title: string;
+    note?: string;
+    location?: string;
+    createdAt: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

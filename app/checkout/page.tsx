@@ -3,29 +3,17 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import {
-    ArrowLeft,
-    Building2,
-    CheckCircle,
-    CircleDollarSign,
-    CreditCard,
-    Loader2,
-    Smartphone,
-    Truck,
-    Wallet,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, Loader2, Phone, Truck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { createOrderApi, createGuestOrderApi, confirmGuestCodOrderApi } from '@/lib/api/orderApi';
 import { createPaymentIntentApi, verifyPaymentApi, confirmCodOrderApi, createGuestPaymentApi, verifyGuestPaymentApi } from '@/lib/api/paymentApi';
 import { validateCouponApi } from '@/lib/api/couponApi';
 import { getProductsApi } from '@/lib/api/productApi';
-import { openRazorpayCheckout } from '@/lib/razorpay';
+import { isPaymentCancelledError, openRazorpayCheckout } from '@/lib/razorpay';
 import type { ShippingAddress, GuestInfo, Order } from '@/lib/api/types';
 
-type PaymentMethod = 'card' | 'upi' | 'netbanking' | 'wallet' | 'paylater' | 'cod';
-
-type OrderPaymentMethod = 'card' | 'upi' | 'netbanking' | 'razorpay' | 'cod';
+type CheckoutPaymentMode = 'online' | 'cod';
 
 const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
 
@@ -37,41 +25,17 @@ const normalizeText = (value: string): string =>
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
 
-const PAYMENT_METHODS: Array<{
-    id: PaymentMethod;
+const PAYMENT_MODES: Array<{
+    id: CheckoutPaymentMode;
     label: string;
     description: string;
     icon: typeof CreditCard;
 }> = [
     {
-        id: 'upi',
-        label: 'UPI',
-        description: 'Google Pay, PhonePe, Paytm and more',
-        icon: Smartphone,
-    },
-    {
-        id: 'card',
-        label: 'Card',
-        description: 'Visa, Mastercard, Rupay, Amex',
+        id: 'online',
+        label: 'Pay online',
+        description: 'UPI, cards, netbanking, wallets & more — opens Razorpay checkout',
         icon: CreditCard,
-    },
-    {
-        id: 'netbanking',
-        label: 'Net Banking',
-        description: 'All major Indian banks',
-        icon: Building2,
-    },
-    {
-        id: 'wallet',
-        label: 'Wallet',
-        description: 'Mobikwik, Freecharge and more',
-        icon: Wallet,
-    },
-    {
-        id: 'paylater',
-        label: 'Pay Later / EMI',
-        description: 'EMI and buy-now-pay-later options',
-        icon: CircleDollarSign,
     },
     {
         id: 'cod',
@@ -81,30 +45,12 @@ const PAYMENT_METHODS: Array<{
     },
 ];
 
-const toOrderPaymentMethod = (method: PaymentMethod): OrderPaymentMethod => {
-    if (method === 'cod') return 'cod';
-    if (method === 'card') return 'card';
-    if (method === 'upi') return 'upi';
-    if (method === 'netbanking') return 'netbanking';
-    return 'razorpay';
-};
-
-const getRazorpayMethodPreference = (method: PaymentMethod) => {
-    switch (method) {
-        case 'card':
-            return { card: true };
-        case 'upi':
-            return { upi: true };
-        case 'netbanking':
-            return { netbanking: true };
-        case 'wallet':
-            return { wallet: true };
-        case 'paylater':
-            return { paylater: true, emi: true };
-        default:
-            return undefined;
-    }
-};
+function digitsOnlyPhone(value: string): string {
+    const d = value.replace(/\D/g, '');
+    if (d.length >= 12 && d.startsWith('91')) return d.slice(-10);
+    if (d.length >= 10) return d.slice(-10);
+    return d;
+}
 
 function CheckoutForm({
     items,
@@ -122,6 +68,7 @@ function CheckoutForm({
     const [isLoading, setIsLoading] = useState(false);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [infoMessage, setInfoMessage] = useState<string | null>(null);
     const [couponInput, setCouponInput] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState<{
         couponCode: string;
@@ -144,7 +91,14 @@ function CheckoutForm({
         country: 'India',
     });
 
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
+    const [paymentMode, setPaymentMode] = useState<CheckoutPaymentMode>('online');
+    const [contactPhone, setContactPhone] = useState('');
+
+    useEffect(() => {
+        if (user?.phone) {
+            setContactPhone(user.phone);
+        }
+    }, [user?.phone]);
 
     const subtotal = totalPrice;
     const shippingCharge = subtotal >= 499 ? 0 : 49;
@@ -158,12 +112,14 @@ function CheckoutForm({
         }
 
         setError(null);
+        setInfoMessage(null);
         setIsApplyingCoupon(true);
 
         try {
             const result = await validateCouponApi({
                 couponCode: couponInput.trim(),
                 subtotal,
+                shippingCharge,
             });
             setAppliedCoupon(result);
             setCouponInput(result.couponCode);
@@ -210,6 +166,14 @@ function CheckoutForm({
         if (!shippingAddress.pincode.trim() || shippingAddress.pincode.length !== 6) {
             setError('Please enter a valid 6-digit pincode');
             return false;
+        }
+
+        if (user && paymentMode === 'online') {
+            const d = digitsOnlyPhone(contactPhone);
+            if (d.length < 10) {
+                setError('Enter a valid 10-digit mobile for Razorpay and SMS updates');
+                return false;
+            }
         }
 
         return true;
@@ -271,6 +235,7 @@ function CheckoutForm({
 
     const handlePlaceOrder = async () => {
         setError(null);
+        setInfoMessage(null);
 
         if (!validateForm()) return;
 
@@ -278,13 +243,14 @@ function CheckoutForm({
 
         try {
             let order: Order;
-            const orderPaymentMethod = toOrderPaymentMethod(paymentMethod);
+            const orderPaymentMethod = paymentMode === 'cod' ? 'cod' : 'razorpay';
 
             if (user) {
                 order = await createOrderApi({
                     shippingAddress,
                     paymentMethod: orderPaymentMethod,
                     couponCode: appliedCoupon?.couponCode,
+                    ...(paymentMode === 'online' ? { contactPhone } : {}),
                 });
             } else {
                 const guestItems = await resolveGuestOrderItems();
@@ -297,7 +263,7 @@ function CheckoutForm({
                 });
             }
 
-            if (paymentMethod === 'cod') {
+            if (paymentMode === 'cod') {
                 if (user) {
                     await confirmCodOrderApi(order._id);
                 } else {
@@ -314,6 +280,12 @@ function CheckoutForm({
                 : await createGuestPaymentApi(order._id, guestInfo.email, 'razorpay');
 
             if (paymentIntent.provider === 'razorpay' && paymentIntent.razorpayOrderId && paymentIntent.razorpayKeyId) {
+                await new Promise<void>((resolve) => {
+                    queueMicrotask(() => resolve());
+                });
+
+                const razorpayContact = user ? digitsOnlyPhone(contactPhone) : digitsOnlyPhone(guestInfo.phone);
+
                 const response = await openRazorpayCheckout({
                     key: paymentIntent.razorpayKeyId,
                     amount: paymentIntent.amount,
@@ -321,11 +293,10 @@ function CheckoutForm({
                     name: 'Vrateez',
                     description: `Order #${order._id.slice(-6).toUpperCase()}`,
                     order_id: paymentIntent.razorpayOrderId,
-                    method: getRazorpayMethodPreference(paymentMethod),
                     prefill: {
                         name: user?.name || guestInfo.name,
                         email: user?.email || guestInfo.email,
-                        contact: guestInfo.phone,
+                        contact: razorpayContact,
                     },
                     theme: {
                         color: '#1d4ed8',
@@ -333,23 +304,34 @@ function CheckoutForm({
                     handler: () => {},
                 });
 
-                if (user) {
-                    await verifyPaymentApi({
-                        orderId: order._id,
-                        provider: 'razorpay',
-                        razorpayOrderId: response.razorpay_order_id,
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        razorpaySignature: response.razorpay_signature,
-                    });
-                } else {
-                    await verifyGuestPaymentApi({
-                        orderId: order._id,
-                        email: guestInfo.email,
-                        provider: 'razorpay',
-                        razorpayOrderId: response.razorpay_order_id,
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        razorpaySignature: response.razorpay_signature,
-                    });
+                try {
+                    if (user) {
+                        await verifyPaymentApi({
+                            orderId: order._id,
+                            provider: 'razorpay',
+                            razorpayOrderId: response.razorpay_order_id,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature,
+                        });
+                    } else {
+                        await verifyGuestPaymentApi({
+                            orderId: order._id,
+                            email: guestInfo.email,
+                            provider: 'razorpay',
+                            razorpayOrderId: response.razorpay_order_id,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature,
+                        });
+                    }
+                } catch (verifyErr) {
+                    const msg =
+                        verifyErr instanceof Error ? verifyErr.message : 'Payment could not be verified. Please try again.';
+                    const qs = new URLSearchParams({ orderId: order._id, message: msg });
+                    if (!user && guestInfo.email) {
+                        qs.set('email', guestInfo.email);
+                    }
+                    router.push(`/order-payment-error?${qs.toString()}`);
+                    return;
                 }
             } else {
                 throw new Error('Online payment is currently unavailable. Please try Cash on Delivery or contact support.');
@@ -359,6 +341,12 @@ function CheckoutForm({
             router.push(`/order-success?orderId=${order._id}&email=${encodeURIComponent(guestInfo.email || user?.email || '')}`);
         } catch (err) {
             console.error('Checkout error:', err);
+            if (isPaymentCancelledError(err)) {
+                setInfoMessage(
+                    'Payment window was closed. Your order may be pending — use Pay again when you are ready, or choose Cash on Delivery.',
+                );
+                return;
+            }
             setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
@@ -484,38 +472,59 @@ function CheckoutForm({
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h2 className="text-lg font-bold text-gray-900 mb-1">Payment Options</h2>
-                    <p className="text-sm text-gray-500 mb-4">All payment methods are processed securely via Razorpay. No PayPal option is shown.</p>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">Payment</h2>
+                    <p className="text-sm text-gray-500 mb-4">
+                        Online payments open the Razorpay window directly (all methods inside Razorpay). Choose COD if you
+                        prefer cash on delivery.
+                    </p>
 
                     <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                        {PAYMENT_METHODS.map((method) => {
-                            const Icon = method.icon;
-                            const selected = paymentMethod === method.id;
+                        {PAYMENT_MODES.map((mode) => {
+                            const Icon = mode.icon;
+                            const selected = paymentMode === mode.id;
 
                             return (
                                 <label
-                                    key={method.id}
+                                    key={mode.id}
                                     className={`flex items-center gap-4 p-4 cursor-pointer transition border-b border-gray-100 last:border-b-0 ${
                                         selected ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
                                     }`}
                                 >
                                     <input
                                         type="radio"
-                                        name="paymentMethod"
-                                        value={method.id}
+                                        name="paymentMode"
+                                        value={mode.id}
                                         checked={selected}
-                                        onChange={() => setPaymentMethod(method.id)}
+                                        onChange={() => setPaymentMode(mode.id)}
                                         className="h-5 w-5 text-blue-600"
                                     />
                                     <Icon size={21} className={selected ? 'text-blue-700' : 'text-gray-500'} />
                                     <div>
-                                        <p className="font-semibold text-gray-900 leading-tight">{method.label}</p>
-                                        <p className="text-sm text-gray-500">{method.description}</p>
+                                        <p className="font-semibold text-gray-900 leading-tight">{mode.label}</p>
+                                        <p className="text-sm text-gray-500">{mode.description}</p>
                                     </div>
                                 </label>
                             );
                         })}
                     </div>
+
+                    {user && paymentMode === 'online' && (
+                        <div className="mt-4">
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                                <Phone size={16} className="text-gray-500" />
+                                Mobile for Razorpay and order updates *
+                            </label>
+                            <input
+                                type="tel"
+                                value={contactPhone}
+                                onChange={(e) => setContactPhone(e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                placeholder="9876543210"
+                                autoComplete="tel"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Saved to your account when you place the order.</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -608,6 +617,12 @@ function CheckoutForm({
                         </div>
                     </div>
 
+                    {infoMessage && (
+                        <div className="mt-4 p-3 bg-sky-50 border border-sky-200 rounded-lg text-sky-900 text-sm">
+                            {infoMessage}
+                        </div>
+                    )}
+
                     {error && (
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                             {error}
@@ -627,7 +642,7 @@ function CheckoutForm({
                         ) : (
                             <>
                                 <CheckCircle size={20} />
-                                {paymentMethod === 'cod' ? 'Place Order' : `Pay ₹${total}`}
+                                {paymentMode === 'cod' ? 'Place Order' : `Pay ₹${total}`}
                             </>
                         )}
                     </button>
