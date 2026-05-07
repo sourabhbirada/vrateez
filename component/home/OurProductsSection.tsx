@@ -5,31 +5,31 @@ import Link from 'next/link';
 
 const categories = [
     {
-        image: '/virteez/Blueberry cookies.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Blueberry+cookies.jpeg',
         label: 'Cookies',
         desc: 'Almond · Coconut · Walnut · Cashew',
         href: '/shop?category=cookies',
     },
     {
-        image: '/virteez/Energy bar closeup.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Energy+bar+closeup.jpeg',
         label: 'Energy on the Go',
         desc: 'Energy Bar · Energy Booster',
         href: '/shop?category=energy-on-the-go',
     },
     {
-        image: '/virteez/Desert dates drops.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Desert+dates+drops.jpeg',
         label: 'Infused Cookies',
         desc: 'Blueberry · Cranberry · Desert Dates',
         href: '/shop?category=infused-cookie',
     },
     {
-        image: '/virteez/Almond cookies in plate.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Almond+cookies+in+plate.jpeg',
         label: 'Savory Snacks',
         desc: 'Makhana · Crunchy Bites · Falahaari Chips',
         href: '/shop?category=savory-snacks',
     },
     {
-        image: '/virteez/Cashew cookies in plate along with box.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Cashew+cookies+in+plate+along+with+box.jpeg',
         label: 'Wholesome Delights',
         desc: 'Instant Sama Upma',
         href: '/shop?category=wholesome-delights',

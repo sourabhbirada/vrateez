@@ -1,9 +1,4 @@
-export type ProductCategory =
-  | "cookies"
-  | "infused-cookie"
-  | "energy-on-the-go"
-  | "savory-snacks"
-  | "wholesome-delights";
+export type ProductCategory = string;
 
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   cookies: "Cookies",
@@ -62,6 +57,29 @@ export interface Product {
   nutritionHighlights: string[];
   stock: number;
   isActive: boolean;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  isActive: boolean;
+  sortOrder: number;
+  productsCount?: number;
+}
+
+export interface Banner {
+  _id: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  ctaLink: string;
+  image: string;
+  bgColor: string;
+  isActive: boolean;
+  position: number;
 }
 
 export interface CartItem {

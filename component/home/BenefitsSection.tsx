@@ -2,31 +2,31 @@ import Image from 'next/image';
 
 const benefits = [
     {
-        image: '/virteez/Energy bar closeup.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Energy+bar+closeup.jpeg',
         title: 'Vrat Friendly',
         subtitle: 'Always',
         bg: 'bg-amber-50',
     },
     {
-        image: '/virteez/Cashew cookies in plate along with box.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Cashew+cookies+in+plate+along+with+box.jpeg',
         title: 'No Fillers &',
         subtitle: 'No Palm Oil',
         bg: 'bg-[#FFF3CD]',
     },
     {
-        image: '/virteez/Blueberry cookies.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Blueberry+cookies.jpeg',
         title: 'Clean Label',
         subtitle: 'Ingredients',
         bg: 'bg-[#FCE4EC]',
     },
     {
-        image: '/virteez/Energy bar.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Energy+bar.jpeg',
         title: 'Gut &',
         subtitle: 'Wellness Support',
         bg: 'bg-[#D7CCC8]',
     },
     {
-        image: '/virteez/Almond cookies in plate.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Almond+cookies+in+plate.jpeg',
         title: 'Tradition Meets',
         subtitle: 'Innovation',
         bg: 'bg-[#FFF8E1]',

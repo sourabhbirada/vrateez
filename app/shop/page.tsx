@@ -7,8 +7,9 @@ import { useSearchParams } from 'next/navigation';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { getProductsApi } from '@/lib/api/productApi';
+import { getCategoriesApi } from '@/lib/api/categoryApi';
 import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
-import { getProductCategoryLabel, normalizeProductCategory } from '@/lib/api/types';
+import { normalizeProductCategory } from '@/lib/api/types';
 
 interface ShopProduct {
     id: string | number;
@@ -32,21 +33,14 @@ function ShopContent() {
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'rating'>('default');
     const [allProducts, setAllProducts] = useState<ShopProduct[]>([]);
+    const [categories, setCategories] = useState<Array<{ key: string; label: string }>>([{ key: 'all', label: 'All' }]);
     const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
-
-    const categories = [
-        { key: 'all', label: 'All' },
-        ...Array.from(new Set(allProducts.map(p => p.category))).map(cat => ({
-            key: cat,
-            label: getProductCategoryLabel(cat),
-        })),
-    ];
 
     useEffect(() => {
         async function loadProducts() {
             try {
-                const response = await getProductsApi({ limit: 100 });
+                const [response, categoryItems] = await Promise.all([getProductsApi({ limit: 100 }), getCategoriesApi()]);
                 const mapped: ShopProduct[] = response.items.map((p: ApiProduct) => ({
                     id: p._id,
                     name: p.name,
@@ -63,8 +57,10 @@ function ShopContent() {
                     description: p.description,
                 }));
                 setAllProducts(mapped);
+                setCategories([{ key: 'all', label: 'All' }, ...categoryItems.map((cat) => ({ key: cat.slug, label: cat.name }))]);
             } catch {
                 setAllProducts([]);
+                setCategories([{ key: 'all', label: 'All' }]);
             } finally {
                 setLoading(false);
             }

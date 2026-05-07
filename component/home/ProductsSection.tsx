@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { getProductsApi } from '@/lib/api/productApi';
+import { getCategoriesApi } from '@/lib/api/categoryApi';
 import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
-import { getProductCategoryLabel } from '@/lib/api/types';
 
 interface ProductView {
     id: string;
@@ -26,13 +26,15 @@ interface ProductView {
 export default function ProductsSection() {
     const [activeCategory, setActiveCategory] = useState('all');
     const [products, setProducts] = useState<ProductView[]>([]);
+    const [categories, setCategories] = useState<Array<{ key: string; label: string }>>([{ key: 'all', label: 'All' }]);
     const { addToCart } = useCart();
 
     useEffect(() => {
         async function loadProducts() {
             try {
                 const response = await getProductsApi({ limit: 100 });
-                setProducts(response.items.map((p: ApiProduct) => ({
+                const [productsRes, categoriesRes] = await Promise.all([getProductsApi({ limit: 100 }), getCategoriesApi()]);
+                setProducts(productsRes.items.map((p: ApiProduct) => ({
                     id: p._id,
                     name: p.name,
                     slug: p.slug,
@@ -45,21 +47,18 @@ export default function ProductsSection() {
                     discount: p.discount,
                     weight: p.weight,
                 })));
+                setCategories([
+                    { key: 'all', label: 'All' },
+                    ...categoriesRes.map((category) => ({ key: category.slug, label: category.name })),
+                ]);
             } catch {
                 setProducts([]);
+                setCategories([{ key: 'all', label: 'All' }]);
             }
         }
 
         void loadProducts();
     }, []);
-
-    const categories = [
-        { key: 'all', label: 'All' },
-        ...Array.from(new Set(products.map(p => p.category))).map(cat => ({
-            key: cat,
-            label: getProductCategoryLabel(cat),
-        })),
-    ];
 
     const filtered =
         activeCategory === 'all'

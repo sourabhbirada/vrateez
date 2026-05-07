@@ -73,7 +73,7 @@ export default function BulkOrderPage() {
                 {/* Background image */}
                 <div className="absolute inset-0">
                     <Image
-                        src="/virteez/Assorted cookie box.jpeg"
+                        src="https://vrateez.s3.ap-south-1.amazonaws.com/Assorted+cookie+box.jpeg"
                         alt="Vrateez bulk order"
                         fill
                         className="object-cover opacity-20"

@@ -4,10 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { getBannersApi } from '@/lib/api/bannerApi';
+import { getCategoriesApi } from '@/lib/api/categoryApi';
 
 const slides = [
     {
-        image: '/virteez/All three infused cookies.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/All+three+infused+cookies.jpeg',
         tag: 'Vrat Friendly · Clean Label',
         title: 'Ancient Grains.\nModern Nutrition.',
         subtitle: 'Millet-based snacks crafted with Vedic wisdom and food science.',
@@ -15,7 +17,7 @@ const slides = [
         href: '/shop?category=cookies',
     },
     {
-        image: '/virteez/Energy bar with packaging.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/WhatsApp+Image+2026-04-07+at+6.24.42+PM+(1).jpeg',
         tag: 'No Palm Oil · No Onion · No Garlic',
         title: 'Energy That\nHonors You.',
         subtitle: 'Nut & seed bars designed to boost stamina — naturally.',
@@ -23,7 +25,7 @@ const slides = [
         href: '/shop?category=energy-on-the-go',
     },
     {
-        image: '/virteez/Assorted cookie box.jpeg',
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Assorted+cookie+box.jpeg',
         tag: 'Gluten Free · Science Backed',
         title: 'Pure. Honest.\nNourishing.',
         subtitle: 'Every ingredient chosen for health. Every product made with trust.',
@@ -40,9 +42,20 @@ const CATEGORIES = [
     { label: 'Wholesome Delights', href: '/shop?category=wholesome-delights' },
 ];
 
+type HeroSlide = {
+    image: string;
+    tag: string;
+    title: string;
+    subtitle: string;
+    cta: string;
+    href: string;
+};
+
 export default function HeroSection() {
     const [current, setCurrent] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [dynamicSlides, setDynamicSlides] = useState<HeroSlide[]>(slides);
+    const [dynamicCategories, setDynamicCategories] = useState(CATEGORIES);
 
     const goTo = useCallback((idx: number) => {
         if (isAnimating) return;
@@ -53,14 +66,43 @@ export default function HeroSection() {
         }, 350);
     }, [isAnimating]);
 
-    const next = useCallback(() => goTo((current + 1) % slides.length), [current, goTo]);
+    const next = useCallback(() => goTo((current + 1) % dynamicSlides.length), [current, goTo, dynamicSlides.length]);
 
     useEffect(() => {
         const timer = setInterval(next, 4000);
         return () => clearInterval(timer);
     }, [next]);
 
-    const slide = slides[current];
+    useEffect(() => {
+        async function loadDynamicContent() {
+            try {
+                const [bannerItems, categoryItems] = await Promise.all([getBannersApi(), getCategoriesApi()]);
+                if (bannerItems.length) {
+                    setDynamicSlides(
+                        bannerItems
+                            .filter((b) => b.isActive)
+                            .sort((a, b) => a.position - b.position)
+                            .map((b) => ({
+                                image: b.image,
+                                tag: 'Vrateez',
+                                title: b.title,
+                                subtitle: b.subtitle,
+                                cta: b.cta,
+                                href: b.ctaLink,
+                            })),
+                    );
+                }
+                if (categoryItems.length) {
+                    setDynamicCategories(categoryItems.map((cat) => ({ label: cat.name, href: `/shop?category=${cat.slug}` })));
+                }
+            } catch {
+                // Keep static fallback.
+            }
+        }
+        void loadDynamicContent();
+    }, []);
+
+    const slide = dynamicSlides[current] || slides[0];
     const contentAnim = isAnimating ? 'opacity-0 translate-y-5' : 'opacity-100 translate-y-0';
 
     return (
@@ -109,7 +151,7 @@ export default function HeroSection() {
                             <span className="text-[10px] font-bold tracking-[0.2em] text-white/35 uppercase mr-3 shrink-0">
                                 Categories
                             </span>
-                            {CATEGORIES.map((cat) => (
+                            {dynamicCategories.map((cat) => (
                                 <Link
                                     key={cat.label}
                                     href={cat.href}
@@ -125,7 +167,7 @@ export default function HeroSection() {
 
             {/* Slide dots */}
             <div className="absolute bottom-14 right-8 md:right-16 z-10 flex gap-2">
-                {slides.map((_, i) => (
+                {dynamicSlides.map((_, i) => (
                     <button
                         key={i}
                         onClick={() => goTo(i)}
