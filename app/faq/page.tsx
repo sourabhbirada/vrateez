@@ -1,140 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { getFaqsApi } from '@/lib/api/faqApi';
+import type { Faq } from '@/lib/api/types';
 
-const faqCategories = [
-    {
-        key: 'general',
-        label: 'General',
-        color: 'bg-orange-500',
-    },
-    {
-        key: 'cookies',
-        label: 'Protein Cookies',
-        color: 'bg-amber-500',
-    },
-    {
-        key: 'bars',
-        label: 'Energy Bars',
-        color: 'bg-emerald-500',
-    },
-    {
-        key: 'nutrition',
-        label: 'Nutrition & Ingredients',
-        color: 'bg-rose-500',
-    },
-    {
-        key: 'orders',
-        label: 'Orders & Shipping',
-        color: 'bg-blue-500',
-    },
+const CATEGORY_COLORS = [
+    'bg-orange-500',
+    'bg-amber-500',
+    'bg-emerald-500',
+    'bg-rose-500',
+    'bg-blue-500',
+    'bg-purple-500',
+    'bg-lime-500',
 ];
-
-const faqs: Record<string, { question: string; answer: string }[]> = {
-    general: [
-        {
-            question: 'What is Vrateez?',
-            answer: 'Vrateez is a health-focused snack brand based in Jaipur, Rajasthan, offering high-protein cookies, energy bars, and superfood snacks. All our products are made with real ingredients, no added sugar, and are backed by nutritional science to give you the best of taste and health.',
-        },
-        {
-            question: 'Are Vrateez products suitable for vegetarians?',
-            answer: 'Yes! All our products are 100% vegetarian. We use whey protein concentrate derived from grass-fed sources. None of our products contain any meat, fish, or egg-derived ingredients.',
-        },
-        {
-            question: 'Where are Vrateez products made?',
-            answer: 'All Vrateez products are manufactured in FSSAI-certified facilities in Jaipur, Rajasthan, following strict quality control and hygiene standards. Every batch is tested for quality and nutritional accuracy.',
-        },
-        {
-            question: 'Are your products certified?',
-            answer: 'Yes. All products are FSSAI-approved and lab-tested. We maintain full transparency about our ingredient sourcing and nutritional claims.',
-        },
-    ],
-    cookies: [
-        {
-            question: 'How much protein is in each cookie?',
-            answer: 'Each Vrateez protein cookie contains 10g of high-quality whey protein. This makes them an excellent protein-rich snack for between meals, pre-workout fuel, or a healthy dessert replacement.',
-        },
-        {
-            question: 'Do protein cookies taste like regular cookies?',
-            answer: 'Absolutely! Our cookies are designed to taste like premium dessert cookies, not protein supplements. Customers consistently say they can\'t believe they\'re eating a protein cookie. We use real nuts, fruits, and natural flavours for authentic taste.',
-        },
-        {
-            question: 'What flavours of protein cookies are available?',
-            answer: 'We offer six delicious flavours: Almond, Blueberry, Cashew, Coconut, Cranberry, and Walnut. We also have an Assorted Cookie Box that includes a mix of all flavours — perfect for gifting or trying everything.',
-        },
-        {
-            question: 'How should I store the cookies?',
-            answer: 'Store in a cool, dry place away from direct sunlight. Once opened, consume within 5 days for best freshness. The cookies have a shelf life of 6 months from the date of manufacture when unopened.',
-        },
-        {
-            question: 'Are the cookies gluten-free?',
-            answer: 'Our cookies contain oat flour as a primary ingredient, so they are not certified gluten-free. However, they do not contain wheat or refined flour (maida). If you have celiac disease, please consult your doctor before consuming.',
-        },
-    ],
-    bars: [
-        {
-            question: 'How much protein is in each energy bar?',
-            answer: 'Each Vrateez energy bar contains 21g of grass-fed whey protein isolate — one of the highest protein-per-bar ratios in the market. This makes it perfect for post-workout recovery or a meal replacement snack.',
-        },
-        {
-            question: 'When is the best time to eat a protein bar?',
-            answer: 'Protein bars are incredibly versatile. They\'re great as a post-workout recovery snack (within 30 minutes of exercising), a mid-afternoon energy boost, a meal replacement when you\'re busy, or a healthy dessert after dinner.',
-        },
-        {
-            question: 'Do energy bars have artificial sweeteners?',
-            answer: 'No. We use a small amount of honey for binding and natural sweetness, along with stevia for additional sweetness without calories. Our bars contain zero artificial sweeteners, colours, or preservatives.',
-        },
-        {
-            question: 'Can I eat protein bars every day?',
-            answer: 'Yes! Our bars are made with whole food ingredients and can be consumed daily as part of a balanced diet. They\'re a healthier alternative to traditional snack bars, biscuits, or chocolate. However, they should complement a varied diet, not replace whole meals entirely.',
-        },
-    ],
-    nutrition: [
-        {
-            question: 'What is whey protein and why do you use it?',
-            answer: 'Whey protein is a complete protein derived from milk during the cheese-making process. It contains all 9 essential amino acids and is quickly absorbed by the body. We use grass-fed whey protein concentrate and isolate because they offer the best bioavailability and amino acid profile for muscle recovery and overall health.',
-        },
-        {
-            question: 'Are your products really zero added sugar?',
-            answer: 'Yes. Our cookies have absolutely zero added sugar. We use stevia, a natural plant-based sweetener, to provide sweetness without the calories or blood sugar spikes. Our energy bars use a minimal amount of honey (a natural sugar) for binding purposes, which is listed transparently in our ingredients.',
-        },
-        {
-            question: 'How many calories are in each product?',
-            answer: 'Protein Cookies: approximately 145-162 kcal per cookie depending on flavour. Energy Bars: approximately 220 kcal per bar. Desert Date Drops: approximately 130 kcal per serving. All products are designed to be nutrient-dense while keeping calorie count reasonable.',
-        },
-        {
-            question: 'Do your products contain any allergens?',
-            answer: 'Our products contain milk (whey protein) and tree nuts (almonds, cashews, walnuts, coconut depending on the flavour). They are produced in a facility that also processes peanuts, soy, and sesame. Always check the specific product label if you have allergies.',
-        },
-        {
-            question: 'Are your products keto-friendly?',
-            answer: 'While our cookies and bars are low in sugar, they contain oats and other carbohydrate sources, so they are not strictly keto-friendly. However, they are excellent for a moderate-carb, high-protein diet. Each cookie has approximately 12-15g of carbs.',
-        },
-    ],
-    orders: [
-        {
-            question: 'How do I place a bulk order?',
-            answer: 'Visit our Bulk Orders page and fill out the inquiry form. Whether you\'re a café, gym, retail store, or corporate entity looking for gifting options, our team will get back to you within 24 hours with custom pricing and delivery details.',
-        },
-        {
-            question: 'What is the shipping time?',
-            answer: 'Orders are processed within 24 hours and typically delivered within 3-5 business days across India. Metro cities often receive delivery in 2-3 days. We partner with trusted logistics providers to ensure your snacks arrive fresh.',
-        },
-        {
-            question: 'Is there free shipping?',
-            answer: 'Yes! We offer free shipping on all orders above ₹499. Orders below ₹499 have a flat shipping fee of ₹49.',
-        },
-        {
-            question: 'What is your return policy?',
-            answer: 'We accept returns within 7 days of delivery if the product is damaged or defective. Since these are food products, we cannot accept returns for change of mind. Please contact us at vrateezfoodspvtltd@gmail.com with photos of any issues and we\'ll resolve it quickly.',
-        },
-        {
-            question: 'Can I track my order?',
-            answer: 'Yes. Once your order is shipped, you\'ll receive an email and SMS with tracking details. You can track your order status in real-time using the link provided.',
-        },
-    ],
-};
 
 function AccordionItem({ question, answer }: { question: string; answer: string }) {
     const [open, setOpen] = useState(false);
@@ -157,7 +36,41 @@ function AccordionItem({ question, answer }: { question: string; answer: string 
 }
 
 export default function FaqPage() {
-    const [activeCategory, setActiveCategory] = useState('general');
+    const [faqs, setFaqs] = useState<Faq[]>([]);
+    const [activeCategory, setActiveCategory] = useState<string>('');
+
+    useEffect(() => {
+        async function loadFaqs() {
+            try {
+                const items = await getFaqsApi();
+                const ordered = [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                setFaqs(ordered);
+                if (ordered.length) {
+                    setActiveCategory(ordered[0].category);
+                }
+            } catch {
+                setFaqs([]);
+                setActiveCategory('');
+            }
+        }
+
+        void loadFaqs();
+    }, []);
+
+    const categories = useMemo(() => {
+        const seen = new Set<string>();
+        const result: Array<{ key: string; label: string; color: string }> = [];
+        faqs.forEach((faq) => {
+            if (!seen.has(faq.category)) {
+                seen.add(faq.category);
+                const color = CATEGORY_COLORS[result.length % CATEGORY_COLORS.length];
+                result.push({ key: faq.category, label: faq.category, color });
+            }
+        });
+        return result;
+    }, [faqs]);
+
+    const filtered = faqs.filter((faq) => faq.category === activeCategory);
 
     return (
         <main className="bg-white min-h-screen">
@@ -175,29 +88,35 @@ export default function FaqPage() {
             <section className="max-w-4xl mx-auto px-8 py-16">
                 <h2 className="text-3xl font-extrabold text-gray-900 mb-8">Frequently Asked Questions</h2>
 
-                {/* Category tabs */}
-                <div className="flex flex-wrap gap-3 mb-10">
-                    {faqCategories.map(cat => (
-                        <button
-                            key={cat.key}
-                            onClick={() => setActiveCategory(cat.key)}
-                            className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${
-                                activeCategory === cat.key
-                                    ? `${cat.color} text-white shadow-lg scale-105`
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        >
-                            {cat.label}
-                        </button>
-                    ))}
-                </div>
+                {categories.length ? (
+                    <>
+                        {/* Category tabs */}
+                        <div className="flex flex-wrap gap-3 mb-10">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat.key}
+                                    onClick={() => setActiveCategory(cat.key)}
+                                    className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${
+                                        activeCategory === cat.key
+                                            ? `${cat.color} text-white shadow-lg scale-105`
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    {cat.label}
+                                </button>
+                            ))}
+                        </div>
 
-                {/* Accordion list */}
-                <div className="space-y-3">
-                    {faqs[activeCategory]?.map((faq, i) => (
-                        <AccordionItem key={i} question={faq.question} answer={faq.answer} />
-                    ))}
-                </div>
+                        {/* Accordion list */}
+                        <div className="space-y-3">
+                            {filtered.map((faq) => (
+                                <AccordionItem key={faq._id} question={faq.question} answer={faq.answer} />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-16 text-gray-500">No FAQs available right now.</div>
+                )}
 
                 {/* CTA */}
                 <div className="mt-16 bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-10 text-center">

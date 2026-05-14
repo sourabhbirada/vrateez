@@ -78,19 +78,21 @@ export default function HeroSection() {
             try {
                 const [bannerItems, categoryItems] = await Promise.all([getBannersApi(), getCategoriesApi()]);
                 if (bannerItems.length) {
-                    setDynamicSlides(
-                        bannerItems
-                            .filter((b) => b.isActive)
-                            .sort((a, b) => a.position - b.position)
-                            .map((b) => ({
-                                image: b.image,
-                                tag: 'Vrateez',
-                                title: b.title,
-                                subtitle: b.subtitle,
-                                cta: b.cta,
-                                href: b.ctaLink,
-                            })),
-                    );
+                    const activeBanners = bannerItems
+                        .filter((b) => b.isActive)
+                        .sort((a, b) => a.position - b.position)
+                        .map((b) => ({
+                            image: b.image,
+                            tag: 'Vrateez',
+                            title: b.title,
+                            subtitle: b.subtitle,
+                            cta: b.cta,
+                            href: b.ctaLink,
+                        }));
+
+                    if (activeBanners.length) {
+                        setDynamicSlides(activeBanners);
+                    }
                 }
                 if (categoryItems.length) {
                     setDynamicCategories(categoryItems.map((cat) => ({ label: cat.name, href: `/shop?category=${cat.slug}` })));

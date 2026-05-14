@@ -1,7 +1,35 @@
+"use client";
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Instagram, Facebook, Twitter, MapPin, Phone, Mail } from 'lucide-react';
+import { getCategoriesApi } from '@/lib/api/categoryApi';
+
+const fallbackCategories = [
+    { label: 'Cookies', href: '/shop?category=cookies' },
+    { label: 'Infused Cookies', href: '/shop?category=infused-cookie' },
+    { label: 'Energy on the Go', href: '/shop?category=energy-on-the-go' },
+    { label: 'Savory Snacks', href: '/shop?category=savory-snacks' },
+    { label: 'Wholesome Delights', href: '/shop?category=wholesome-delights' },
+];
 
 export default function Footer() {
+    const [categories, setCategories] = useState(fallbackCategories);
+
+    useEffect(() => {
+        async function loadCategories() {
+            try {
+                const items = await getCategoriesApi();
+                if (!items.length) return;
+                setCategories(items.map((cat) => ({ label: cat.name, href: `/shop?category=${cat.slug}` })));
+            } catch {
+                setCategories(fallbackCategories);
+            }
+        }
+
+        void loadCategories();
+    }, []);
+
     return (
         <footer className="bg-[#2D1B14] text-white py-16 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-amber-600/60 to-transparent" />
@@ -51,11 +79,11 @@ export default function Footer() {
                         <div>
                             <h4 className="font-bold text-[10px] uppercase mb-4 text-white/35 tracking-[0.2em]">Shop</h4>
                             <Link href="/shop" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">All Products</Link>
-                            <Link href="/shop?category=cookies" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Cookies</Link>
-                            <Link href="/shop?category=infused-cookie" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Infused Cookies</Link>
-                            <Link href="/shop?category=energy-on-the-go" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Energy on the Go</Link>
-                            <Link href="/shop?category=savory-snacks" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Savory Snacks</Link>
-                            <Link href="/shop?category=wholesome-delights" className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">Wholesome Delights</Link>
+                            {categories.map((cat) => (
+                                <Link key={cat.href} href={cat.href} className="block mb-2.5 hover:text-amber-400 transition text-sm text-white/60">
+                                    {cat.label}
+                                </Link>
+                            ))}
                         </div>
                         <div>
                             <h4 className="font-bold text-[10px] uppercase mb-4 text-white/35 tracking-[0.2em]">Company</h4>

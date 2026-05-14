@@ -70,6 +70,15 @@ export interface Category {
   productsCount?: number;
 }
 
+export interface Faq {
+  _id: string;
+  question: string;
+  answer: string;
+  category: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface Banner {
   _id: string;
   title: string;

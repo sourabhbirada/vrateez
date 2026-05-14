@@ -2,8 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { getCategoriesApi } from '@/lib/api/categoryApi';
 
-const categories = [
+const fallbackCategories = [
     {
         image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Blueberry+cookies.jpeg',
         label: 'Cookies',
@@ -36,6 +38,21 @@ const categories = [
     },
 ];
 
+const fallbackBySlug: Record<string, { image: string; desc: string }> = {
+    cookies: { image: fallbackCategories[0].image, desc: fallbackCategories[0].desc },
+    'energy-on-the-go': { image: fallbackCategories[1].image, desc: fallbackCategories[1].desc },
+    'infused-cookie': { image: fallbackCategories[2].image, desc: fallbackCategories[2].desc },
+    'savory-snacks': { image: fallbackCategories[3].image, desc: fallbackCategories[3].desc },
+    'wholesome-delights': { image: fallbackCategories[4].image, desc: fallbackCategories[4].desc },
+};
+
+type CategoryCardItem = {
+    image: string;
+    label: string;
+    desc: string;
+    href: string;
+};
+
 const features = [
     { icon: '🕉️', title: '100% Vrat Friendly' },
     { icon: '🌾', title: 'Millet-Based' },
@@ -46,6 +63,35 @@ const features = [
 ];
 
 export default function OurProductsSection() {
+    const [categories, setCategories] = useState<CategoryCardItem[]>(fallbackCategories);
+
+    useEffect(() => {
+        async function loadCategories() {
+            try {
+                const items = await getCategoriesApi();
+                if (!items.length) return;
+                const mapped = items.slice(0, 5).map((cat) => {
+                    const fallback = fallbackBySlug[cat.slug];
+                    return {
+                        image: cat.image || fallback?.image || fallbackCategories[0].image,
+                        label: cat.name,
+                        desc: cat.description || fallback?.desc || 'Explore this category',
+                        href: `/shop?category=${cat.slug}`,
+                    };
+                });
+                setCategories(mapped);
+            } catch {
+                setCategories(fallbackCategories);
+            }
+        }
+
+        void loadCategories();
+    }, []);
+
+    const useSplitLayout = categories.length <= 5;
+    const topRow = useMemo(() => (useSplitLayout ? categories.slice(0, 3) : categories), [categories, useSplitLayout]);
+    const bottomRow = useMemo(() => (useSplitLayout ? categories.slice(3) : []), [categories, useSplitLayout]);
+
     return (
         <section className="py-20 bg-linear-to-b from-amber-50/60 to-stone-50">
             <div className="max-w-7xl mx-auto px-8">
@@ -65,15 +111,19 @@ export default function OurProductsSection() {
 
                 {/* Category grid — 5 items: 3 top, 2 bottom centered */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
-                    {categories.slice(0, 3).map((cat, i) => (
+                    {topRow.map((cat, i) => (
                         <CategoryCard key={i} cat={cat} />
                     ))}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto mb-16">
-                    {categories.slice(3).map((cat, i) => (
-                        <CategoryCard key={i} cat={cat} />
-                    ))}
-                </div>
+                {bottomRow.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto mb-16">
+                        {bottomRow.map((cat, i) => (
+                            <CategoryCard key={i} cat={cat} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="mb-16" />
+                )}
 
                 {/* Feature badges */}
                 <div className="border-t border-stone-200 pt-14">
@@ -96,7 +146,7 @@ export default function OurProductsSection() {
     );
 }
 
-function CategoryCard({ cat }: { cat: typeof categories[0] }) {
+function CategoryCard({ cat }: { cat: CategoryCardItem }) {
     return (
         <Link
             href={cat.href}
