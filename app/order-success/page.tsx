@@ -61,10 +61,10 @@ function OrderSuccessContent() {
             <div className="min-h-screen flex flex-col items-center justify-center px-4">
                 <div className="text-red-500 mb-4">{error || 'Order not found'}</div>
                 <Link
-                    href="/shop"
+                    href={`/order-tracking?orderId=${encodeURIComponent(orderId || '')}&email=${encodeURIComponent(email || user?.email || '')}`}
                     className="bg-orange-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-orange-600 transition"
                 >
-                    Continue Shopping
+                    Track Order
                 </Link>
             </div>
         );
@@ -272,10 +272,10 @@ function OrderSuccessContent() {
                         </Link>
                     )}
                     <Link
-                        href="/shop"
+                        href={`/order-tracking?orderId=${encodeURIComponent(order._id)}&email=${encodeURIComponent(email || user?.email || '')}`}
                         className="inline-flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-600 transition"
                     >
-                        Continue Shopping
+                        Track Order
                         <ArrowRight size={18} />
                     </Link>
                 </div>
