@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Package, MapPin, Mail, Phone, Truck, Search } from 'lucide-react';
@@ -12,7 +12,7 @@ const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
 
 const isObjectId = (value: string) => OBJECT_ID_REGEX.test(value);
 
-export default function OrderTrackingPage() {
+function OrderTrackingContent() {
     const searchParams = useSearchParams();
     const { user } = useAuth();
     const [orderId, setOrderId] = useState(searchParams.get('orderId') || '');
@@ -251,5 +251,17 @@ export default function OrderTrackingPage() {
                 </p>
             </div>
         </main>
+    );
+}
+
+export default function OrderTrackingPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen bg-gray-50 py-12 flex items-center justify-center">
+                <p className="text-gray-500">Loading order tracking...</p>
+            </main>
+        }>
+            <OrderTrackingContent />
+        </Suspense>
     );
 }

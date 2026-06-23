@@ -29,7 +29,30 @@ interface ProductView {
     ingredients: string;
     nutritionHighlights: string[];
     amazonUrl?: string;
-    packOptions: PackOption[];
+    packOptions?: PackOption[];
+}
+
+function mapApiProductToView(p: ApiProduct): ProductView {
+    return {
+        id: p._id,
+        name: p.name,
+        slug: p.slug,
+        category: p.category,
+        image: p.image,
+        images: p.images,
+        rating: p.rating,
+        reviews: p.reviews,
+        price: p.price,
+        originalPrice: p.originalPrice,
+        discount: p.discount,
+        weight: p.weight,
+        description: p.description,
+        benefits: p.benefits,
+        ingredients: p.ingredients,
+        nutritionHighlights: p.nutritionHighlights,
+        amazonUrl: p.amazonUrl,
+        packOptions: p.packOptions || [],
+    };
 }
 
 export default function ProductPage() {
@@ -51,47 +74,9 @@ export default function ProductPage() {
                     getProductsApi({ limit: 100 }),
                 ]);
 
-                setProduct({
-                    id: apiProduct._id,
-                    name: apiProduct.name,
-                    slug: apiProduct.slug,
-                    category: apiProduct.category,
-                    image: apiProduct.image,
-                    images: apiProduct.images,
-                    rating: apiProduct.rating,
-                    reviews: apiProduct.reviews,
-                    price: apiProduct.price,
-                    originalPrice: apiProduct.originalPrice,
-                    discount: apiProduct.discount,
-                    weight: apiProduct.weight,
-                    description: apiProduct.description,
-                    benefits: apiProduct.benefits,
-                    ingredients: apiProduct.ingredients,
-                    nutritionHighlights: apiProduct.nutritionHighlights,
-                    amazonUrl: apiProduct.amazonUrl,
-                    packOptions: apiProduct.packOptions || [],
-                });
+                setProduct(mapApiProductToView(apiProduct));
 
-                setAllProducts(
-                    apiList.items.map((p: ApiProduct) => ({
-                        id: p._id,
-                        name: p.name,
-                        slug: p.slug,
-                        category: p.category,
-                        image: p.image,
-                        images: p.images,
-                        rating: p.rating,
-                        reviews: p.reviews,
-                        price: p.price,
-                        originalPrice: p.originalPrice,
-                        discount: p.discount,
-                        weight: p.weight,
-                        description: p.description,
-                        benefits: p.benefits,
-                        ingredients: p.ingredients,
-                        nutritionHighlights: p.nutritionHighlights,
-                    }))
-                );
+                setAllProducts(apiList.items.map(mapApiProductToView));
             } catch {
                 setProduct(null);
                 setAllProducts([]);
@@ -112,7 +97,7 @@ export default function ProductPage() {
         );
     }
 
-    const hasPackOptions = product.packOptions.length > 0;
+    const hasPackOptions = (product.packOptions?.length ?? 0) > 0;
     const orderQuantity = hasPackOptions ? selectedPackUnits : quantity;
     const unitPrice = getEffectiveUnitPrice(product, orderQuantity);
     const lineTotal = getPackTotal(product, orderQuantity);
@@ -241,7 +226,7 @@ export default function ProductPage() {
                                     <p className="font-semibold text-gray-900">Single pack</p>
                                     <p className="text-sm text-gray-600 mt-1">1 pc · ₹{product.price}</p>
                                 </button>
-                                {product.packOptions.map((pack) => {
+                                {product.packOptions?.map((pack) => {
                                     const total = getPackTotal(product, pack.units);
                                     return (
                                         <button
