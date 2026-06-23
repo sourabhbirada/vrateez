@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, ReactNode, useEffect 
 import { addCartItemApi, clearCartApi, getCartApi, removeCartItemApi, updateCartItemApi } from '@/lib/api/cartApi';
 import { getToken } from '@/lib/api/storage';
 import type { Cart } from '@/lib/api/types';
+import { getEffectiveUnitPrice } from '@/lib/packPricing';
 
 export interface CartItem {
     id: string;
@@ -22,7 +23,7 @@ interface CartContextType {
     openCart: () => void;
     closeCart: () => void;
     toggleCart: () => void;
-    addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+    addToCart: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
     removeFromCart: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
     clearCart: () => void;
@@ -50,7 +51,7 @@ const mapApiCart = (cart: Cart): CartItem[] => {
         slug: it.product.slug,
         name: it.product.name,
         image: it.product.image,
-        price: it.product.price,
+        price: getEffectiveUnitPrice(it.product, it.quantity),
         originalPrice: it.product.originalPrice,
         quantity: it.quantity,
         weight: it.product.weight,
@@ -131,7 +132,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const closeCart = useCallback(() => setIsOpen(false), []);
     const toggleCart = useCallback(() => setIsOpen(prev => !prev), []);
 
-    const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
+    const addToCart = useCallback((item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+        const qty = Math.max(1, item.quantity ?? 1);
         if (!isValidGuestItemId(item.id)) {
             console.error('Cannot add item with invalid ID:', item.id);
             return;
@@ -147,18 +149,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             void (async () => {
                 try {
-                    const cart = await addCartItemApi({ productId: item.id, quantity: 1 });
+                    const cart = await addCartItemApi({ productId: item.id, quantity: qty });
                     setItems(mapApiCart(cart));
                 } catch {
-                    // Fallback to local cart behavior when API fails
                     setItems(prev => {
                         const existing = prev.find(i => i.id === item.id);
                         if (existing) {
                             return prev.map(i =>
-                                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                                i.id === item.id ? { ...i, quantity: i.quantity + qty, price: item.price } : i
                             );
                         }
-                        return [...prev, { ...item, quantity: 1 }];
+                        return [...prev, { ...item, quantity: qty }];
                     });
                 }
             })();
@@ -170,10 +171,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const existing = prev.find(i => i.id === item.id);
             if (existing) {
                 return prev.map(i =>
-                    i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                    i.id === item.id ? { ...i, quantity: i.quantity + qty, price: item.price } : i
                 );
             }
-            return [...prev, { ...item, quantity: 1 }];
+            return [...prev, { ...item, quantity: qty }];
         });
         setIsOpen(true);
     }, []);

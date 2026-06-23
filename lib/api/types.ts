@@ -58,6 +58,12 @@ export interface Product {
   nutritionHighlights: string[];
   stock: number;
   isActive: boolean;
+  amazonUrl?: string;
+  packOptions?: Array<{
+    units: number;
+    label?: string;
+    discountPercent: number;
+  }>;
 }
 
 export interface Category {
