@@ -4,15 +4,6 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Send, Phone, Mail, MapPin, CheckCircle2 } from 'lucide-react';
 
-const BULK_PARTNERS = [
-    { icon: '🏪', label: 'Retail Store Stocking' },
-    { icon: '☕', label: 'Café / Restaurant' },
-    { icon: '🎁', label: 'Corporate Gifting' },
-    { icon: '🏋️', label: 'Gym / Fitness Studio' },
-    { icon: '🚛', label: 'Distributor / Wholesale' },
-    { icon: '🏥', label: 'Wellness / Clinic' },
-];
-
 const WHY_PARTNER = [
     'Custom pricing for bulk orders',
     'Dedicated account manager',
@@ -66,10 +57,10 @@ export default function BulkOrderPage() {
     };
 
     return (
-        <main className="bg-[#FDFAF5] min-h-screen">
+        <main className="bg-parchment min-h-screen">
 
             {/* ─── Hero ─── */}
-            <section className="relative overflow-hidden bg-stone-900 text-white pt-24 pb-20 px-6">
+            <section className="relative overflow-hidden bg-ink text-parchment pt-24 pb-20 px-6">
                 {/* Background image */}
                 <div className="absolute inset-0">
                     <Image
@@ -78,23 +69,18 @@ export default function BulkOrderPage() {
                         fill
                         className="object-cover opacity-20"
                     />
-                    <div className="absolute inset-0 bg-linear-to-r from-stone-900/95 via-stone-900/80 to-stone-900/60" />
+                    <div className="absolute inset-0 bg-linear-to-r from-ink/95 via-ink/80 to-ink/60" />
                 </div>
 
                 <div className="relative max-w-5xl mx-auto">
-                    <p className="text-[11px] font-semibold tracking-[0.25em] text-amber-400 uppercase mb-4">
+                    <p className="font-label text-[10px] tracking-[0.25em] text-millet uppercase mb-4">
                         Partner with Vrateez
                     </p>
-                    <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight mb-5 max-w-2xl">
+                    <h1 className="font-display italic text-4xl md:text-6xl leading-tight tracking-tight mb-5 max-w-2xl">
                         Bulk &amp; Special Orders
                     </h1>
-                    {/* <p className="text-stone-300 max-w-xl text-base md:text-lg leading-relaxed mb-8">
-                        Whether you're looking to serve Vrateez in your café, stock it in your store, distribute across India, or create meaningful corporate gifts — we're built for partnerships that share our values.
-                    </p> */}
                 </div>
             </section>
-
-
 
             {/* ─── Form + Sidebar ─── */}
             <section className="max-w-5xl mx-auto px-6 py-16">
@@ -102,24 +88,24 @@ export default function BulkOrderPage() {
 
                     {/* Form */}
                     <div className="lg:col-span-3">
-                        <h2 className="text-2xl font-extrabold text-stone-900 mb-1 tracking-tight">Send an Inquiry</h2>
-                        <p className="text-sm text-stone-500 mb-7">
-                            Drop your details and we'll get back to you within 24 hours with custom pricing. You can also reach us directly via WhatsApp or email.
+                        <h2 className="font-display italic text-2xl text-ink mb-1 tracking-tight">Send an Inquiry</h2>
+                        <p className="text-sm text-ink/50 mb-7">
+                            Drop your details and we&apos;ll get back to you within 24 hours with custom pricing. You can also reach us directly via WhatsApp or email.
                         </p>
 
-                        <div className="bg-white rounded-2xl border border-stone-200 p-7 shadow-sm">
+                        <div className="bg-white/70 rounded-2xl border border-ink/10 p-7 shadow-sm">
                             {submitted ? (
                                 <div className="text-center py-12">
-                                    <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-green-100">
-                                        <CheckCircle2 size={28} className="text-green-600" />
+                                    <div className="w-16 h-16 bg-basil/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-basil/20">
+                                        <CheckCircle2 size={28} className="text-basil" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-stone-900 mb-2">Inquiry Submitted!</h3>
-                                    <p className="text-stone-500 text-sm max-w-xs mx-auto">
-                                        We'll get back to you within 24 hours with custom pricing and details.
+                                    <h3 className="font-display italic text-xl text-ink mb-2">Inquiry Submitted!</h3>
+                                    <p className="text-ink/50 text-sm max-w-xs mx-auto">
+                                        We&apos;ll get back to you within 24 hours with custom pricing and details.
                                     </p>
                                     <button
                                         onClick={() => setSubmitted(false)}
-                                        className="mt-6 text-amber-700 font-semibold hover:underline text-sm"
+                                        className="mt-6 text-turmeric font-semibold hover:underline text-sm"
                                     >
                                         Submit another inquiry
                                     </button>
@@ -196,14 +182,14 @@ export default function BulkOrderPage() {
 
                                     <button
                                         type="submit" disabled={isSubmitting}
-                                        className="w-full bg-stone-900 hover:bg-amber-700 text-white py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2"
+                                        className="w-full bg-ink hover:bg-turmeric text-parchment py-3.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2"
                                     >
                                         <Send size={15} />
                                         {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
                                     </button>
 
                                     {submitError && (
-                                        <p className="text-sm text-red-600 text-center">{submitError}</p>
+                                        <p className="text-sm text-clay text-center">{submitError}</p>
                                     )}
                                 </form>
                             )}
@@ -214,35 +200,35 @@ export default function BulkOrderPage() {
                     <div className="lg:col-span-2 space-y-5">
 
                         {/* Contact card */}
-                        <div className="bg-stone-900 text-white rounded-2xl p-7">
-                            <h3 className="font-bold text-base mb-5">Contact Us Directly</h3>
+                        <div className="bg-ink text-parchment rounded-2xl p-7">
+                            <h3 className="font-display italic text-lg mb-5">Contact Us Directly</h3>
                             <div className="space-y-4">
-                                <ContactRow icon={<Phone size={15} className="text-amber-400" />} label="Phone">
-                                    <a href="tel:+919407230914" className="text-sm text-white hover:text-amber-400 transition">
+                                <ContactRow icon={<Phone size={15} className="text-millet" />} label="Phone">
+                                    <a href="tel:+919407230914" className="text-sm text-parchment hover:text-millet transition">
                                         +91 94072 30914
                                     </a>
                                 </ContactRow>
-                                <ContactRow icon={<Mail size={15} className="text-amber-400" />} label="Email">
-                                    <a href="mailto:vrateezfoodspvtltd@gmail.com" className="text-sm text-white hover:text-amber-400 transition">
+                                <ContactRow icon={<Mail size={15} className="text-millet" />} label="Email">
+                                    <a href="mailto:vrateezfoodspvtltd@gmail.com" className="text-sm text-parchment hover:text-millet transition">
                                         vrateezfoodspvtltd@gmail.com
                                     </a>
                                 </ContactRow>
-                                <ContactRow icon={<MapPin size={15} className="text-amber-400" />} label="Address">
-                                    <p className="text-sm text-stone-300">Jaipur, Rajasthan, India</p>
+                                <ContactRow icon={<MapPin size={15} className="text-millet" />} label="Address">
+                                    <p className="text-sm text-parchment/60">Jaipur, Rajasthan, India</p>
                                 </ContactRow>
                             </div>
                         </div>
 
                         {/* Why partner */}
-                        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-7">
-                            <h3 className="font-bold text-stone-900 mb-1">Why Partner with Vrateez?</h3>
-                            <p className="text-xs text-stone-500 mb-5 leading-relaxed">
+                        <div className="bg-turmeric/8 border border-turmeric/20 rounded-2xl p-7">
+                            <h3 className="font-display italic text-lg text-ink mb-1">Why Partner with Vrateez?</h3>
+                            <p className="text-xs text-ink/50 mb-5 leading-relaxed">
                                 A brand born out of responsibility — pure ingredients, honest preparation, nourishing in every sense.
                             </p>
                             <ul className="space-y-2.5">
                                 {WHY_PARTNER.map((item) => (
-                                    <li key={item} className="flex items-start gap-2.5 text-sm text-stone-700">
-                                        <span className="text-amber-600 font-bold mt-0.5 shrink-0">✓</span>
+                                    <li key={item} className="flex items-start gap-2.5 text-sm text-ink/70">
+                                        <span className="text-turmeric font-bold mt-0.5 shrink-0">✓</span>
                                         {item}
                                     </li>
                                 ))}
@@ -256,12 +242,12 @@ export default function BulkOrderPage() {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-const inputCls = 'w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition';
+const inputCls = 'w-full px-4 py-2.5 border border-ink/15 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-turmeric/40 focus:border-turmeric transition bg-white/70 text-ink';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div>
-            <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5">{label}</label>
+            <label className="block text-[11px] font-semibold text-ink/40 uppercase tracking-wider mb-1.5">{label}</label>
             {children}
         </div>
     );
@@ -272,7 +258,7 @@ function ContactRow({ icon, label, children }: { icon: React.ReactNode; label: s
         <div className="flex items-start gap-3">
             <div className="mt-0.5 shrink-0">{icon}</div>
             <div>
-                <p className="text-[10px] text-stone-400 uppercase font-semibold tracking-wider mb-0.5">{label}</p>
+                <p className="text-[10px] text-parchment/40 uppercase font-semibold tracking-wider mb-0.5">{label}</p>
                 {children}
             </div>
         </div>

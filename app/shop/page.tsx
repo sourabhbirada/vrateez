@@ -1,5 +1,6 @@
 'use client';
 
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
@@ -10,6 +11,9 @@ import { getProductsApi } from '@/lib/api/productApi';
 import { getCategoriesApi } from '@/lib/api/categoryApi';
 import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
 import { normalizeProductCategory } from '@/lib/api/types';
+
+// Note: This is a client component, so metadata needs to be set via generateMetadata in a server component wrapper
+// For now, we'll handle SEO through document title manipulation
 
 interface ShopProduct {
     id: string | number;
@@ -92,7 +96,7 @@ function ShopContent() {
     };
 
     return (
-        <main className="bg-white min-h-screen">
+        <main className="bg-parchment min-h-screen">
             <div className="max-w-7xl mx-auto px-8 py-10">
                 {/* Filters row */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
@@ -104,8 +108,8 @@ function ShopContent() {
                                 onClick={() => setActiveCategory(cat.key)}
                                 className={`px-5 py-2 rounded-full font-semibold text-sm transition-all ${
                                     activeCategory === cat.key
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-ink text-parchment'
+                                        : 'bg-ink/5 text-ink/70 hover:bg-ink/10'
                                 }`}
                             >
                                 {cat.label}
@@ -117,7 +121,7 @@ function ShopContent() {
                     <select
                         value={sortBy}
                         onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                        className="border border-gray-300 rounded-full px-4 py-2 text-sm bg-white"
+                        className="border border-ink/15 rounded-full px-4 py-2 text-sm bg-white/70 text-ink"
                     >
                         <option value="default">Sort: Default</option>
                         <option value="price-asc">Price: Low → High</option>
@@ -127,7 +131,7 @@ function ShopContent() {
                 </div>
 
                 {loading && (
-                    <div className="text-center py-20 text-gray-500">Loading products...</div>
+                    <div className="text-center py-20 text-ink/50">Loading products...</div>
                 )}
 
                 {/* Grid */}
@@ -135,17 +139,17 @@ function ShopContent() {
                     {filtered.map(product => (
                         <div
                             key={product.id}
-                            className="group bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300"
+                            className="group bg-white/60 border border-ink/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300"
                         >
                             <Link href={`/product/${product.slug}`}>
-                                <div className="relative aspect-square bg-gray-50 overflow-hidden">
+                                <div className="relative aspect-square bg-ink/5 overflow-hidden">
                                     <Image
                                         src={product.image}
                                         alt={product.name}
                                         fill
                                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
-                                    <span className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                    <span className="absolute top-3 left-3 bg-basil text-parchment text-xs font-bold px-3 py-1 rounded-full">
                                         {product.discount}
                                     </span>
                                 </div>
@@ -153,11 +157,11 @@ function ShopContent() {
 
                             <div className="p-5">
                                 <Link href={`/product/${product.slug}`}>
-                                    <h3 className="text-sm font-bold text-gray-900 uppercase mb-1 line-clamp-2 hover:text-orange-600 transition">
+                                    <h3 className="text-sm font-bold text-ink uppercase mb-1 line-clamp-2 hover:text-turmeric transition">
                                         {product.name}
                                     </h3>
                                 </Link>
-                                <p className="text-xs text-gray-500 mb-2">{product.weight}</p>
+                                <p className="text-xs text-ink/40 mb-2">{product.weight}</p>
 
                                 <div className="flex items-center gap-1.5 mb-3">
                                     <div className="flex">
@@ -167,26 +171,26 @@ function ShopContent() {
                                                 size={13}
                                                 className={
                                                     i < Math.floor(product.rating)
-                                                        ? 'fill-yellow-400 text-yellow-400'
-                                                        : 'text-gray-300'
+                                                        ? 'fill-millet text-millet'
+                                                        : 'text-ink/15'
                                                 }
                                             />
                                         ))}
                                     </div>
-                                    <span className="text-xs text-gray-500">({product.reviews})</span>
+                                    <span className="text-xs text-ink/40">({product.reviews})</span>
                                 </div>
 
                                 <div className="flex items-center gap-2 mb-4">
-                                    <span className="text-xl font-bold text-gray-900">₹{product.price}</span>
-                                    <span className="text-sm text-gray-400 line-through">₹{product.originalPrice}</span>
+                                    <span className="text-xl font-bold text-ink">₹{product.price}</span>
+                                    <span className="text-sm text-ink/30 line-through">₹{product.originalPrice}</span>
                                 </div>
 
                                 <button
                                     onClick={() => handleAddToCart(product)}
-                                    className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-full font-semibold text-sm hover:bg-orange-600 transition-colors cursor-pointer"
+                                    className="w-full flex items-center justify-center gap-2 bg-ink text-parchment py-3 rounded-full font-semibold text-sm hover:bg-turmeric transition-colors cursor-pointer"
                                 >
                                     <ShoppingCart size={16} />
-                                    ADD TO CART
+                                    Add to cart
                                 </button>
                             </div>
                         </div>
@@ -194,9 +198,9 @@ function ShopContent() {
                 </div>
 
                 {!loading && filtered.length === 0 && (
-                    <div className="text-center py-20 text-gray-400">
+                    <div className="text-center py-20 text-ink/40">
                         <p className="text-xl mb-2">No products found in this category.</p>
-                        <button onClick={() => setActiveCategory('all')} className="text-orange-500 font-semibold hover:underline">
+                        <button onClick={() => setActiveCategory('all')} className="text-turmeric font-semibold hover:underline">
                             View all products
                         </button>
                     </div>
@@ -208,7 +212,7 @@ function ShopContent() {
 
 export default function ShopPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-parchment text-ink/50">Loading...</div>}>
             <ShopContent />
         </Suspense>
     );

@@ -21,20 +21,20 @@ function PaymentErrorContent() {
             : null;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="min-h-screen bg-parchment py-12 px-4">
             <div className="max-w-lg mx-auto">
-                <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-                    <div className="bg-red-50 px-6 py-8 text-center border-b border-red-100">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertTriangle className="text-red-600" size={36} />
+                <div className="bg-white/70 rounded-2xl shadow-sm border border-clay/20 overflow-hidden">
+                    <div className="bg-clay/8 px-6 py-8 text-center border-b border-clay/15">
+                        <div className="w-16 h-16 bg-clay/12 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="text-clay" size={36} />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Payment not completed</h1>
-                        <p className="text-gray-600 mt-2 text-sm leading-relaxed">{decoded}</p>
+                        <h1 className="font-display italic text-2xl text-ink">Payment not completed</h1>
+                        <p className="text-ink/60 mt-2 text-sm leading-relaxed">{decoded}</p>
                     </div>
-                    <div className="px-6 py-6 space-y-4 text-sm text-gray-600">
+                    <div className="px-6 py-6 space-y-4 text-sm text-ink/60">
                         {orderId && (
-                            <p className="font-mono text-xs bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
-                                Order ID: <span className="font-semibold text-gray-900">{orderId}</span>
+                            <p className="font-label text-xs bg-ink/5 rounded-lg px-3 py-2 border border-ink/10">
+                                Order ID: <span className="font-semibold text-ink">{orderId}</span>
                             </p>
                         )}
                         <p>
@@ -46,7 +46,7 @@ function PaymentErrorContent() {
                         {user ? (
                             <Link
                                 href="/account/orders"
-                                className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+                                className="flex-1 inline-flex items-center justify-center gap-2 bg-ink text-parchment py-3 rounded-xl font-semibold hover:bg-turmeric transition"
                             >
                                 <Package size={18} />
                                 My orders
@@ -54,7 +54,7 @@ function PaymentErrorContent() {
                         ) : successHref ? (
                             <Link
                                 href={successHref}
-                                className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+                                className="flex-1 inline-flex items-center justify-center gap-2 bg-ink text-parchment py-3 rounded-xl font-semibold hover:bg-turmeric transition"
                             >
                                 <Package size={18} />
                                 View order status
@@ -62,7 +62,7 @@ function PaymentErrorContent() {
                         ) : null}
                         <Link
                             href="/shop"
-                            className="flex-1 inline-flex items-center justify-center gap-2 border border-gray-200 py-3 rounded-xl font-semibold text-gray-800 hover:bg-gray-50 transition"
+                            className="flex-1 inline-flex items-center justify-center gap-2 border border-ink/15 py-3 rounded-xl font-semibold text-ink hover:bg-ink/5 transition"
                         >
                             <Home size={18} />
                             Back to shop
@@ -71,7 +71,7 @@ function PaymentErrorContent() {
                 </div>
                 <Link
                     href="/shop"
-                    className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-800"
+                    className="mt-6 flex items-center justify-center gap-2 text-sm text-ink/50 hover:text-ink"
                 >
                     <ArrowLeft size={16} />
                     Continue browsing
@@ -85,7 +85,7 @@ export default function OrderPaymentErrorPage() {
     return (
         <Suspense
             fallback={
-                <div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>
+                <div className="min-h-screen bg-parchment flex items-center justify-center text-ink/50">Loading...</div>
             }
         >
             <PaymentErrorContent />

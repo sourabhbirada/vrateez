@@ -45,3 +45,26 @@ export async function confirmGuestCodOrderApi(orderId: string, email: string) {
   const res = await api.post<ApiResponse<{ order: Order }>>("/guest/orders/confirm-cod", { orderId, email });
   return res.data.data.order;
 }
+
+export async function getOrderTrackingApi(orderId: string) {
+  const res = await api.get<ApiResponse<{
+    hasTracking: boolean;
+    tracking?: any;
+    orderId?: string;
+    message?: string;
+    fallback?: {
+      trackingNumber: string;
+      courierPartner?: string;
+      trackingEvents?: any[];
+    };
+  }>>(`/orders/${orderId}/tracking`);
+  return res.data.data;
+}
+
+export async function getOrderByOrderIdApi(orderId: string, email?: string) {
+  const url = email 
+    ? `/orders/track/${orderId}?email=${encodeURIComponent(email)}`
+    : `/orders/track/${orderId}`;
+  const res = await api.get<ApiResponse<{ order: Order }>>(url);
+  return res.data.data.order;
+}

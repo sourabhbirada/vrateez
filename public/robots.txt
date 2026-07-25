@@ -1,0 +1,13 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow admin and checkout pages
+Disallow: /checkout
+Disallow: /account/
+Disallow: /order-success
+Disallow: /order-payment-error
+Disallow: /order-tracking
+
+# Sitemap
+Sitemap: https://vrateez.com/sitemap.xml

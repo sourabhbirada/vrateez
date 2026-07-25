@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import { getCategoriesApi } from '@/lib/api/categoryApi';
+import { useMemo } from 'react';
+import { BadgeCheck, Wheat, Tag, FlaskConical, Sprout, Ban } from 'lucide-react';
 
-const fallbackCategories = [
+// Static — no API calls. Edit this array directly to change categories.
+const CATEGORIES = [
     {
         image: 'https://vrateez.s3.ap-south-1.amazonaws.com/Blueberry+cookies.jpeg',
         label: 'Cookies',
@@ -38,105 +39,62 @@ const fallbackCategories = [
     },
 ];
 
-const fallbackBySlug: Record<string, { image: string; desc: string }> = {
-    cookies: { image: fallbackCategories[0].image, desc: fallbackCategories[0].desc },
-    'energy-on-the-go': { image: fallbackCategories[1].image, desc: fallbackCategories[1].desc },
-    'infused-cookie': { image: fallbackCategories[2].image, desc: fallbackCategories[2].desc },
-    'savory-snacks': { image: fallbackCategories[3].image, desc: fallbackCategories[3].desc },
-    'wholesome-delights': { image: fallbackCategories[4].image, desc: fallbackCategories[4].desc },
-};
-
-type CategoryCardItem = {
-    image: string;
-    label: string;
-    desc: string;
-    href: string;
-};
-
-const features = [
-    { icon: '🕉️', title: '100% Vrat Friendly' },
-    { icon: '🌾', title: 'Millet-Based' },
-    { icon: '🏷️', title: 'Clean Label' },
-    { icon: '🔬', title: 'Science Backed' },
-    { icon: '🌿', title: 'Gut Friendly' },
-    { icon: '🚫', title: 'No Palm Oil' },
+const FEATURES = [
+    { icon: BadgeCheck, title: 'Vrat Friendly' },
+    { icon: Wheat, title: 'Millet-Based' },
+    { icon: Tag, title: 'Clean Label' },
+    { icon: FlaskConical, title: 'Science Backed' },
+    { icon: Sprout, title: 'Gut Friendly' },
+    { icon: Ban, title: 'No Palm Oil' },
 ];
 
+type CategoryCardItem = (typeof CATEGORIES)[number];
+
 export default function OurProductsSection() {
-    const [categories, setCategories] = useState<CategoryCardItem[]>(fallbackCategories);
-
-    useEffect(() => {
-        async function loadCategories() {
-            try {
-                const items = await getCategoriesApi();
-                if (!items.length) return;
-                const mapped = items.slice(0, 5).map((cat) => {
-                    const fallback = fallbackBySlug[cat.slug];
-                    return {
-                        image: cat.image || fallback?.image || fallbackCategories[0].image,
-                        label: cat.name,
-                        desc: cat.description || fallback?.desc || 'Explore this category',
-                        href: `/shop?category=${cat.slug}`,
-                    };
-                });
-                setCategories(mapped);
-            } catch {
-                setCategories(fallbackCategories);
-            }
-        }
-
-        void loadCategories();
-    }, []);
-
-    const useSplitLayout = categories.length <= 5;
-    const topRow = useMemo(() => (useSplitLayout ? categories.slice(0, 3) : categories), [categories, useSplitLayout]);
-    const bottomRow = useMemo(() => (useSplitLayout ? categories.slice(3) : []), [categories, useSplitLayout]);
+    const topRow = useMemo(() => CATEGORIES.slice(0, 3), []);
+    const bottomRow = useMemo(() => CATEGORIES.slice(3), []);
 
     return (
-        <section className="py-20 bg-linear-to-b from-amber-50/60 to-stone-50">
+        <section className="py-20 bg-parchment">
             <div className="max-w-7xl mx-auto px-8">
 
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <p className="text-[11px] font-semibold tracking-[0.25em] text-amber-700 uppercase mb-3">
+                    <p className="font-label text-[11px] tracking-[0.25em] text-clay uppercase mb-3">
                         What We Make
                     </p>
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-stone-900 mb-3 tracking-tight">
+                    <h2 className="font-display italic text-3xl md:text-4xl text-ink mb-3 tracking-tight">
                         Explore by Category
                     </h2>
-                    <p className="text-stone-500 max-w-md mx-auto text-sm">
+                    <p className="text-ink/50 max-w-md mx-auto text-sm leading-relaxed">
                         Every product crafted with traditional ingredients, validated by modern science — and always vrat-friendly.
                     </p>
                 </div>
 
                 {/* Category grid — 5 items: 3 top, 2 bottom centered */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
-                    {topRow.map((cat, i) => (
-                        <CategoryCard key={i} cat={cat} />
+                    {topRow.map((cat) => (
+                        <CategoryCard key={cat.label} cat={cat} />
                     ))}
                 </div>
-                {bottomRow.length ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto mb-16">
-                        {bottomRow.map((cat, i) => (
-                            <CategoryCard key={i} cat={cat} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="mb-16" />
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto mb-16">
+                    {bottomRow.map((cat) => (
+                        <CategoryCard key={cat.label} cat={cat} />
+                    ))}
+                </div>
 
                 {/* Feature badges */}
-                <div className="border-t border-stone-200 pt-14">
-                    <p className="text-center text-[11px] font-semibold tracking-[0.25em] text-stone-400 uppercase mb-8">
+                <div className="border-t border-ink/10 pt-14">
+                    <p className="text-center font-label text-[11px] tracking-[0.25em] text-ink/35 uppercase mb-8">
                         Our Products Are
                     </p>
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-6">
-                        {features.map((f, i) => (
-                            <div key={i} className="flex flex-col items-center text-center group">
-                                <div className="w-16 h-16 rounded-full border-2 border-stone-200 group-hover:border-amber-400 bg-white flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-105 shadow-sm">
-                                    <span className="text-xl">{f.icon}</span>
+                        {FEATURES.map(({ icon: Icon, title }) => (
+                            <div key={title} className="flex flex-col items-center text-center group">
+                                <div className="w-16 h-16 rounded-full border-2 border-ink/10 group-hover:border-turmeric bg-parchment flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-105">
+                                    <Icon size={20} className="text-basil" />
                                 </div>
-                                <p className="text-[10px] md:text-xs font-bold text-stone-700 uppercase leading-tight">{f.title}</p>
+                                <p className="text-[10px] md:text-xs font-bold text-ink/70 uppercase leading-tight tracking-wide">{title}</p>
                             </div>
                         ))}
                     </div>
@@ -158,13 +116,13 @@ function CategoryCard({ cat }: { cat: CategoryCardItem }) {
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-ink/85 via-ink/25 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5">
-                <p className="text-white font-bold text-lg leading-tight mb-1">{cat.label}</p>
-                <p className="text-white/60 text-xs">{cat.desc}</p>
+                <p className="font-display italic text-parchment text-lg leading-tight mb-1">{cat.label}</p>
+                <p className="text-parchment/60 text-xs">{cat.desc}</p>
             </div>
-            <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs">→</span>
+            <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-parchment/15 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-parchment text-xs">→</span>
             </div>
         </Link>
     );

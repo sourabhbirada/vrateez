@@ -75,7 +75,6 @@ export default function ProductPage() {
                 ]);
 
                 setProduct(mapApiProductToView(apiProduct));
-
                 setAllProducts(apiList.items.map(mapApiProductToView));
             } catch {
                 setProduct(null);
@@ -88,9 +87,9 @@ export default function ProductPage() {
 
     if (!product) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
-                <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-                <Link href="/shop" className="text-orange-500 hover:underline">
+            <div className="min-h-screen bg-parchment flex flex-col items-center justify-center">
+                <h1 className="font-display italic text-3xl text-ink mb-4">Product Not Found</h1>
+                <Link href="/shop" className="text-turmeric hover:underline">
                     ← Back to Shop
                 </Link>
             </div>
@@ -121,10 +120,10 @@ export default function ProductPage() {
         .slice(0, 4);
 
     return (
-        <main className="bg-white min-h-screen">
+        <main className="bg-parchment min-h-screen">
             {/* Breadcrumb */}
             <div className="max-w-7xl mx-auto px-8 pt-8">
-                <Link href="/shop" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition">
+                <Link href="/shop" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-ink transition">
                     <ChevronLeft size={16} />
                     Back to Shop
                 </Link>
@@ -134,7 +133,7 @@ export default function ProductPage() {
             <section className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
                 {/* Images */}
                 <div>
-                    <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 mb-4">
+                    <div className="relative aspect-square rounded-2xl overflow-hidden bg-ink/5 mb-4">
                         <Image
                             src={product.images[selectedImage]}
                             alt={product.name}
@@ -150,7 +149,7 @@ export default function ProductPage() {
                                     key={i}
                                     onClick={() => setSelectedImage(i)}
                                     className={`relative w-20 h-20 rounded-lg overflow-hidden shrink-0 border-2 transition ${
-                                        i === selectedImage ? 'border-orange-500' : 'border-transparent hover:border-gray-300'
+                                        i === selectedImage ? 'border-turmeric' : 'border-transparent hover:border-ink/20'
                                     }`}
                                 >
                                     <Image src={img} alt="" fill className="object-cover" />
@@ -162,11 +161,11 @@ export default function ProductPage() {
 
                 {/* Info */}
                 <div>
-                    <span className="inline-block bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase mb-3">
+                    <span className="inline-block bg-turmeric/12 text-clay text-xs font-bold px-3 py-1 rounded-full uppercase mb-3">
                         {getProductCategoryLabel(product.category)}
                     </span>
 
-                    <h1 className="text-3xl font-extrabold text-gray-900 mb-2">{product.name}</h1>
+                    <h1 className="font-display italic text-3xl text-ink mb-2">{product.name}</h1>
 
                     {/* Rating */}
                     <div className="flex items-center gap-2 mb-4">
@@ -177,54 +176,54 @@ export default function ProductPage() {
                                     size={18}
                                     className={
                                         i < Math.floor(product.rating)
-                                            ? 'fill-yellow-400 text-yellow-400'
-                                            : 'text-gray-300'
+                                            ? 'fill-millet text-millet'
+                                            : 'text-ink/15'
                                     }
                                 />
                             ))}
                         </div>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-ink/50">
                             {product.rating} ({product.reviews} reviews)
                         </span>
                     </div>
 
                     {/* Price */}
                     <div className="flex items-baseline gap-3 mb-1">
-                        <span className="text-3xl font-bold text-gray-900">₹{hasPackOptions ? lineTotal : unitPrice}</span>
+                        <span className="text-3xl font-bold text-ink">₹{hasPackOptions ? lineTotal : unitPrice}</span>
                         {hasPackOptions ? (
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-ink/50">
                                 ₹{unitPrice} / pc · {orderQuantity} pcs
                             </span>
                         ) : (
                             <>
-                                <span className="text-lg text-gray-400 line-through">₹{product.originalPrice}</span>
-                                <span className="text-sm bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
+                                <span className="text-lg text-ink/30 line-through">₹{product.originalPrice}</span>
+                                <span className="text-sm bg-basil/12 text-basil font-bold px-2 py-0.5 rounded-full">
                                     {product.discount}
                                 </span>
                             </>
                         )}
                     </div>
                     {!hasPackOptions ? (
-                        <p className="text-sm text-gray-500 mb-6">{product.weight} · Inclusive of all taxes</p>
+                        <p className="text-sm text-ink/50 mb-6">{product.weight} · Inclusive of all taxes</p>
                     ) : (
-                        <p className="text-sm text-gray-500 mb-6">{product.weight} · Pack pricing with bulk discount</p>
+                        <p className="text-sm text-ink/50 mb-6">{product.weight} · Pack pricing with bulk discount</p>
                     )}
 
                     {hasPackOptions && (
                         <div className="mb-6">
-                            <p className="text-sm font-semibold text-gray-900 mb-3">Choose pack size</p>
+                            <p className="text-sm font-semibold text-ink mb-3">Choose pack size</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setSelectedPackUnits(1)}
                                     className={`rounded-xl border p-4 text-left transition ${
                                         selectedPackUnits === 1
-                                            ? 'border-orange-500 bg-orange-50'
-                                            : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-turmeric bg-turmeric/8'
+                                            : 'border-ink/15 hover:border-ink/30'
                                     }`}
                                 >
-                                    <p className="font-semibold text-gray-900">Single pack</p>
-                                    <p className="text-sm text-gray-600 mt-1">1 pc · ₹{product.price}</p>
+                                    <p className="font-semibold text-ink">Single pack</p>
+                                    <p className="text-sm text-ink/60 mt-1">1 pc · ₹{product.price}</p>
                                 </button>
                                 {product.packOptions?.map((pack) => {
                                     const total = getPackTotal(product, pack.units);
@@ -235,19 +234,19 @@ export default function ProductPage() {
                                             onClick={() => setSelectedPackUnits(pack.units)}
                                             className={`rounded-xl border p-4 text-left transition ${
                                                 selectedPackUnits === pack.units
-                                                    ? 'border-orange-500 bg-orange-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-turmeric bg-turmeric/8'
+                                                    : 'border-ink/15 hover:border-ink/30'
                                             }`}
                                         >
                                             <div className="flex items-center justify-between gap-2">
-                                                <p className="font-semibold text-gray-900">{getPackLabel(pack)}</p>
+                                                <p className="font-semibold text-ink">{getPackLabel(pack)}</p>
                                                 {pack.discountPercent > 0 ? (
-                                                    <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
+                                                    <span className="text-xs bg-basil/12 text-basil font-bold px-2 py-0.5 rounded-full">
                                                         {pack.discountPercent}% OFF
                                                     </span>
                                                 ) : null}
                                             </div>
-                                            <p className="text-sm text-gray-600 mt-1">
+                                            <p className="text-sm text-ink/60 mt-1">
                                                 {pack.units} pcs · ₹{total}
                                             </p>
                                         </button>
@@ -260,7 +259,7 @@ export default function ProductPage() {
                     {/* Benefits pills */}
                     <div className="flex flex-wrap gap-2 mb-6">
                         {product.benefits.map((b, i) => (
-                            <span key={i} className="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">
+                            <span key={i} className="bg-ink/5 text-ink/70 text-xs font-medium px-3 py-1.5 rounded-full">
                                 {b}
                             </span>
                         ))}
@@ -269,17 +268,17 @@ export default function ProductPage() {
                     {/* Quantity & Add to Cart */}
                     <div className="flex items-center gap-4 mb-4">
                         {!hasPackOptions ? (
-                            <div className="flex items-center border border-gray-300 rounded-full">
+                            <div className="flex items-center border border-ink/15 rounded-full">
                                 <button
                                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                    className="p-3 hover:bg-gray-100 rounded-full transition"
+                                    className="p-3 hover:bg-ink/5 rounded-full transition"
                                 >
                                     <Minus size={16} />
                                 </button>
                                 <span className="px-4 font-semibold">{quantity}</span>
                                 <button
                                     onClick={() => setQuantity(q => q + 1)}
-                                    className="p-3 hover:bg-gray-100 rounded-full transition"
+                                    className="p-3 hover:bg-ink/5 rounded-full transition"
                                 >
                                     <Plus size={16} />
                                 </button>
@@ -288,10 +287,10 @@ export default function ProductPage() {
 
                         <button
                             onClick={handleAddToCart}
-                            className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-full font-bold text-lg hover:bg-orange-600 transition-colors cursor-pointer"
+                            className="flex-1 flex items-center justify-center gap-2 bg-ink text-parchment py-4 rounded-full font-bold text-lg hover:bg-turmeric transition-colors cursor-pointer"
                         >
                             <ShoppingCart size={20} />
-                            ADD TO CART
+                            Add to cart
                         </button>
                     </div>
 
@@ -300,7 +299,7 @@ export default function ProductPage() {
                             href={product.amazonUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mb-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 py-4 font-bold text-gray-900 transition hover:border-orange-500 hover:text-orange-600"
+                            className="mb-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-ink/20 py-4 font-bold text-ink transition hover:border-turmeric hover:text-turmeric"
                         >
                             <ExternalLink size={18} />
                             Buy on Amazon
@@ -309,30 +308,30 @@ export default function ProductPage() {
 
                     {/* Trust badges */}
                     <div className="grid grid-cols-3 gap-4 mb-8">
-                        <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                            <Truck size={20} className="text-gray-700 mb-1" />
-                            <span className="text-xs font-medium text-gray-700">Free Shipping ₹499+</span>
+                        <div className="flex flex-col items-center text-center p-3 bg-ink/5 rounded-xl">
+                            <Truck size={20} className="text-ink/60 mb-1" />
+                            <span className="text-xs font-medium text-ink/60">Free Shipping ₹499+</span>
                         </div>
-                        <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                            <Shield size={20} className="text-gray-700 mb-1" />
-                            <span className="text-xs font-medium text-gray-700">Secure Checkout</span>
+                        <div className="flex flex-col items-center text-center p-3 bg-ink/5 rounded-xl">
+                            <Shield size={20} className="text-ink/60 mb-1" />
+                            <span className="text-xs font-medium text-ink/60">Secure Checkout</span>
                         </div>
-                        <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                            <RotateCcw size={20} className="text-gray-700 mb-1" />
-                            <span className="text-xs font-medium text-gray-700">Easy Returns</span>
+                        <div className="flex flex-col items-center text-center p-3 bg-ink/5 rounded-xl">
+                            <RotateCcw size={20} className="text-ink/60 mb-1" />
+                            <span className="text-xs font-medium text-ink/60">Easy Returns</span>
                         </div>
                     </div>
 
                     {/* Tabs */}
-                    <div className="border-b flex gap-6 mb-4">
+                    <div className="border-b border-ink/10 flex gap-6 mb-4">
                         {(['description', 'nutrition', 'ingredients'] as const).map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`pb-3 text-sm font-semibold capitalize transition border-b-2 ${
                                     activeTab === tab
-                                        ? 'border-gray-900 text-gray-900'
-                                        : 'border-transparent text-gray-400 hover:text-gray-600'
+                                        ? 'border-turmeric text-ink'
+                                        : 'border-transparent text-ink/40 hover:text-ink/60'
                                 }`}
                             >
                                 {tab}
@@ -340,12 +339,12 @@ export default function ProductPage() {
                         ))}
                     </div>
 
-                    <div className="text-sm text-gray-600 leading-relaxed">
+                    <div className="text-sm text-ink/60 leading-relaxed">
                         {activeTab === 'description' && <p>{product.description}</p>}
                         {activeTab === 'nutrition' && (
                             <div className="grid grid-cols-2 gap-3">
                                 {product.nutritionHighlights.map((n, i) => (
-                                    <div key={i} className="bg-gray-50 p-3 rounded-lg text-center font-semibold">
+                                    <div key={i} className="bg-ink/5 p-3 rounded-lg text-center font-semibold text-ink">
                                         {n}
                                     </div>
                                 ))}
@@ -359,11 +358,11 @@ export default function ProductPage() {
             {/* Related Products */}
             {related.length > 0 && (
                 <section className="max-w-7xl mx-auto px-8 pb-16">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-8">You May Also Like</h2>
+                    <h2 className="font-display italic text-2xl text-ink mb-8">You May Also Like</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {related.map(rp => (
                             <Link key={rp.id} href={`/product/${rp.slug}`} className="group">
-                                <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
+                                <div className="relative aspect-square rounded-xl overflow-hidden bg-ink/5 mb-3">
                                     <Image
                                         src={rp.image}
                                         alt={rp.name}
@@ -371,10 +370,10 @@ export default function ProductPage() {
                                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                                     />
                                 </div>
-                                <h3 className="text-sm font-bold text-gray-900 group-hover:text-orange-600 transition line-clamp-1">
+                                <h3 className="text-sm font-bold text-ink group-hover:text-turmeric transition line-clamp-1">
                                     {rp.name}
                                 </h3>
-                                <p className="text-sm font-semibold text-gray-700 mt-1">₹{rp.price}</p>
+                                <p className="text-sm font-semibold text-ink/70 mt-1">₹{rp.price}</p>
                             </Link>
                         ))}
                     </div>

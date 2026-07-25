@@ -52,6 +52,8 @@ function digitsOnlyPhone(value: string): string {
     return d;
 }
 
+const inputCls = 'w-full border border-ink/15 rounded-lg px-4 py-3 focus:ring-2 focus:ring-turmeric/40 focus:border-turmeric outline-none transition bg-white/70 text-ink';
+
 function CheckoutForm({
     items,
     totalPrice,
@@ -299,7 +301,7 @@ function CheckoutForm({
                         contact: razorpayContact,
                     },
                     theme: {
-                        color: '#1d4ed8',
+                        color: '#C4711F',
                     },
                     handler: () => {},
                 });
@@ -357,43 +359,43 @@ function CheckoutForm({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
                 {!user && (
-                    <div className="bg-white rounded-2xl p-6 shadow-sm">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Contact Information</h2>
+                    <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10">
+                        <h2 className="font-display italic text-lg text-ink mb-4">Contact Information</h2>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-ink/70 mb-1">
                                     Full Name *
                                 </label>
                                 <input
                                     type="text"
                                     value={guestInfo.name}
                                     onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                    className={inputCls}
                                     placeholder="John Doe"
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-ink/70 mb-1">
                                         Email *
                                     </label>
                                     <input
                                         type="email"
                                         value={guestInfo.email}
                                         onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
-                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                        className={inputCls}
                                         placeholder="john@example.com"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-ink/70 mb-1">
                                         Phone *
                                     </label>
                                     <input
                                         type="tel"
                                         value={guestInfo.phone}
                                         onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
-                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                        className={inputCls}
                                         placeholder="9876543210"
                                     />
                                 </div>
@@ -402,67 +404,67 @@ function CheckoutForm({
                     </div>
                 )}
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping Address</h2>
+                <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10">
+                    <h2 className="font-display italic text-lg text-ink mb-4">Shipping Address</h2>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-ink/70 mb-1">
                                 Address Line 1 *
                             </label>
                             <input
                                 type="text"
                                 value={shippingAddress.line1}
                                 onChange={(e) => setShippingAddress({ ...shippingAddress, line1: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                className={inputCls}
                                 placeholder="House/Flat No., Building Name"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-ink/70 mb-1">
                                 Address Line 2
                             </label>
                             <input
                                 type="text"
                                 value={shippingAddress.line2}
                                 onChange={(e) => setShippingAddress({ ...shippingAddress, line2: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                className={inputCls}
                                 placeholder="Street, Area, Landmark"
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-ink/70 mb-1">
                                     City *
                                 </label>
                                 <input
                                     type="text"
                                     value={shippingAddress.city}
                                     onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                    className={inputCls}
                                     placeholder="Mumbai"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-ink/70 mb-1">
                                     State *
                                 </label>
                                 <input
                                     type="text"
                                     value={shippingAddress.state}
                                     onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                    className={inputCls}
                                     placeholder="Maharashtra"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-ink/70 mb-1">
                                     Pincode *
                                 </label>
                                 <input
                                     type="text"
                                     value={shippingAddress.pincode}
                                     onChange={(e) => setShippingAddress({ ...shippingAddress, pincode: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                    className={inputCls}
                                     placeholder="400001"
                                     maxLength={6}
                                 />
@@ -471,14 +473,14 @@ function CheckoutForm({
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h2 className="text-lg font-bold text-gray-900 mb-1">Payment</h2>
-                    <p className="text-sm text-gray-500 mb-4">
+                <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10">
+                    <h2 className="font-display italic text-lg text-ink mb-1">Payment</h2>
+                    <p className="text-sm text-ink/50 mb-4">
                         Online payments open the Razorpay window directly (all methods inside Razorpay). Choose COD if you
                         prefer cash on delivery.
                     </p>
 
-                    <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                    <div className="border border-ink/15 rounded-2xl overflow-hidden">
                         {PAYMENT_MODES.map((mode) => {
                             const Icon = mode.icon;
                             const selected = paymentMode === mode.id;
@@ -486,8 +488,8 @@ function CheckoutForm({
                             return (
                                 <label
                                     key={mode.id}
-                                    className={`flex items-center gap-4 p-4 cursor-pointer transition border-b border-gray-100 last:border-b-0 ${
-                                        selected ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
+                                    className={`flex items-center gap-4 p-4 cursor-pointer transition border-b border-ink/10 last:border-b-0 ${
+                                        selected ? 'bg-turmeric/8' : 'bg-white/40 hover:bg-ink/5'
                                     }`}
                                 >
                                     <input
@@ -496,12 +498,12 @@ function CheckoutForm({
                                         value={mode.id}
                                         checked={selected}
                                         onChange={() => setPaymentMode(mode.id)}
-                                        className="h-5 w-5 text-blue-600"
+                                        className="h-5 w-5 accent-turmeric"
                                     />
-                                    <Icon size={21} className={selected ? 'text-blue-700' : 'text-gray-500'} />
+                                    <Icon size={21} className={selected ? 'text-clay' : 'text-ink/50'} />
                                     <div>
-                                        <p className="font-semibold text-gray-900 leading-tight">{mode.label}</p>
-                                        <p className="text-sm text-gray-500">{mode.description}</p>
+                                        <p className="font-semibold text-ink leading-tight">{mode.label}</p>
+                                        <p className="text-sm text-ink/50">{mode.description}</p>
                                     </div>
                                 </label>
                             );
@@ -510,27 +512,27 @@ function CheckoutForm({
 
                     {user && paymentMode === 'online' && (
                         <div className="mt-4">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                                <Phone size={16} className="text-gray-500" />
+                            <label className="flex items-center gap-2 text-sm font-medium text-ink/70 mb-1">
+                                <Phone size={16} className="text-ink/50" />
                                 Mobile for Razorpay and order updates *
                             </label>
                             <input
                                 type="tel"
                                 value={contactPhone}
                                 onChange={(e) => setContactPhone(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition"
+                                className={inputCls}
                                 placeholder="9876543210"
                                 autoComplete="tel"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Saved to your account when you place the order.</p>
+                            <p className="text-xs text-ink/40 mt-1">Saved to your account when you place the order.</p>
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-8">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
+                <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10 sticky top-8">
+                    <h2 className="font-display italic text-lg text-ink mb-4">Order Summary</h2>
 
                     <div className="space-y-4 max-h-64 overflow-y-auto mb-4">
                         {items.map((item) => (
@@ -544,9 +546,9 @@ function CheckoutForm({
                                     />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                                    <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                                    <p className="text-sm font-semibold text-gray-900">
+                                    <p className="text-sm font-medium text-ink truncate">{item.name}</p>
+                                    <p className="text-xs text-ink/50">Qty: {item.quantity}</p>
+                                    <p className="text-sm font-semibold text-ink">
                                         ₹{item.price * item.quantity}
                                     </p>
                                 </div>
@@ -554,35 +556,36 @@ function CheckoutForm({
                         ))}
                     </div>
 
-                    <div className="border-t pt-4 space-y-2">
+                    <div className="border-t border-ink/10 pt-4 space-y-2">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Coupon Code</label>
+                            <label className="text-sm font-medium text-ink/70">Coupon Code</label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
                                     value={couponInput}
                                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                                     placeholder="Enter coupon"
-                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                                    className="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-turmeric/40 focus:border-turmeric outline-none bg-white/70 text-ink"
                                 />
                                 <button
                                     type="button"
                                     onClick={handleApplyCoupon}
                                     disabled={isApplyingCoupon}
-                                    className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+                                    className="px-4 py-2 rounded-lg bg-ink text-parchment text-sm font-semibold hover:bg-turmeric disabled:opacity-50"
                                 >
                                     {isApplyingCoupon ? 'Applying...' : 'Apply'}
                                 </button>
                             </div>
                             {appliedCoupon && (
-                                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
-                                    <span className="text-green-700">
-                                        {appliedCoupon.couponCode} applied ({appliedCoupon.description})
+                                <div className="flex items-center justify-between bg-basil/10 border border-basil/25 rounded-lg px-3 py-2 text-sm">
+                                    <span className="text-basil font-medium">
+                                        {appliedCoupon.couponCode} applied
+                                        {appliedCoupon.description && ` · ${appliedCoupon.description}`}
                                     </span>
                                     <button
                                         type="button"
                                         onClick={handleRemoveCoupon}
-                                        className="text-green-700 font-semibold hover:underline"
+                                        className="text-basil font-semibold hover:underline text-xs"
                                     >
                                         Remove
                                     </button>
@@ -591,40 +594,40 @@ function CheckoutForm({
                         </div>
 
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Subtotal</span>
-                            <span className="font-medium">₹{subtotal}</span>
+                            <span className="text-ink/60">Subtotal</span>
+                            <span className="font-medium text-ink">₹{subtotal}</span>
                         </div>
                         {discountAmount > 0 && (
                             <div className="flex justify-between text-sm">
-                                <span className="text-green-700">Discount</span>
-                                <span className="font-medium text-green-700">-₹{discountAmount}</span>
+                                <span className="text-basil">Discount</span>
+                                <span className="font-medium text-basil">-₹{discountAmount}</span>
                             </div>
                         )}
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Shipping</span>
-                            <span className={`font-medium ${shippingCharge === 0 ? 'text-green-600' : ''}`}>
+                            <span className="text-ink/60">Shipping</span>
+                            <span className={`font-medium ${shippingCharge === 0 ? 'text-basil' : 'text-ink'}`}>
                                 {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
                             </span>
                         </div>
                         {shippingCharge > 0 && (
-                            <p className="text-xs text-orange-600">
+                            <p className="text-xs text-turmeric">
                                 Add ₹{499 - subtotal} more for free shipping!
                             </p>
                         )}
-                        <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                        <div className="flex justify-between text-lg font-bold pt-2 border-t border-ink/10 text-ink">
                             <span>Total</span>
                             <span>₹{total}</span>
                         </div>
                     </div>
 
                     {infoMessage && (
-                        <div className="mt-4 p-3 bg-sky-50 border border-sky-200 rounded-lg text-sky-900 text-sm">
+                        <div className="mt-4 p-3 bg-ink/5 border border-ink/15 rounded-lg text-ink/80 text-sm">
                             {infoMessage}
                         </div>
                     )}
 
                     {error && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                        <div className="mt-4 p-3 bg-clay/10 border border-clay/25 rounded-lg text-clay text-sm">
                             {error}
                         </div>
                     )}
@@ -632,7 +635,7 @@ function CheckoutForm({
                     <button
                         onClick={handlePlaceOrder}
                         disabled={isLoading}
-                        className="w-full mt-6 bg-orange-500 text-white py-4 rounded-full font-bold text-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+                        className="w-full mt-6 bg-turmeric text-parchment py-4 rounded-full font-bold text-lg hover:bg-clay disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
                     >
                         {isLoading ? (
                             <>
@@ -647,7 +650,7 @@ function CheckoutForm({
                         )}
                     </button>
 
-                    <p className="text-xs text-gray-400 text-center mt-4">
+                    <p className="text-xs text-ink/40 text-center mt-4">
                         Your payment information is secure and encrypted
                     </p>
                 </div>
@@ -672,17 +675,17 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-parchment py-8">
             <div className="max-w-6xl mx-auto px-4">
                 <div className="mb-8">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition mb-4"
+                        className="flex items-center gap-2 text-ink/60 hover:text-ink transition mb-4"
                     >
                         <ArrowLeft size={20} />
                         <span>Back</span>
                     </button>
-                    <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+                    <h1 className="font-display italic text-3xl text-ink">Checkout</h1>
                 </div>
 
                 <CheckoutForm
