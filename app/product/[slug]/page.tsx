@@ -55,11 +55,14 @@ function mapApiProductToView(p: ApiProduct): ProductView {
     };
 }
 
+import { notFound } from 'next/navigation';
+
 export default function ProductPage() {
     const params = useParams();
     const slug = params.slug as string;
     const [product, setProduct] = useState<ProductView | null>(null);
     const [allProducts, setAllProducts] = useState<ProductView[]>([]);
+    const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
@@ -69,6 +72,7 @@ export default function ProductPage() {
     useEffect(() => {
         async function loadProduct() {
             try {
+                setLoading(true);
                 const [apiProduct, apiList] = await Promise.all([
                     getProductBySlugApi(slug),
                     getProductsApi({ limit: 100 }),
@@ -76,24 +80,31 @@ export default function ProductPage() {
 
                 setProduct(mapApiProductToView(apiProduct));
                 setAllProducts(apiList.items.map(mapApiProductToView));
-            } catch {
+            } catch (error) {
+                console.error('Error loading product:', error);
                 setProduct(null);
                 setAllProducts([]);
+            } finally {
+                setLoading(false);
             }
         }
 
         void loadProduct();
     }, [slug]);
 
-    if (!product) {
+    if (loading) {
         return (
-            <div className="min-h-screen bg-parchment flex flex-col items-center justify-center">
-                <h1 className="font-display italic text-3xl text-ink mb-4">Product Not Found</h1>
-                <Link href="/shop" className="text-turmeric hover:underline">
-                    ← Back to Shop
-                </Link>
+            <div className="min-h-screen bg-parchment flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-turmeric border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-ink/60">Loading product...</p>
+                </div>
             </div>
         );
+    }
+
+    if (!product) {
+        return notFound();
     }
 
     const hasPackOptions = (product.packOptions?.length ?? 0) > 0;

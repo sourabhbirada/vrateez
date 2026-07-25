@@ -16,30 +16,40 @@ export default function Header() {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [showHindi, setShowHindi] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
+    // Handle mounting
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Handle scroll effect
     useEffect(() => {
+        if (!mounted) return;
+        
         const handleScroll = () => {
             setScrolled(window.scrollY > 50);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [mounted]);
 
     // Alternate between Hindi and English every 2 seconds
     useEffect(() => {
-        if (!scrolled) {
-            const interval = setInterval(() => {
-                setShowHindi(prev => !prev);
-            }, 2000);
-            return () => clearInterval(interval);
-        }
-    }, [scrolled]);
+        if (!mounted || scrolled) return;
+        
+        const interval = setInterval(() => {
+            setShowHindi(prev => !prev);
+        }, 2000);
+        return () => clearInterval(interval);
+    }, [scrolled, mounted]);
 
     // Close user menu on outside click
     useEffect(() => {
+        if (!mounted) return;
+        
         const handler = (e: MouseEvent) => {
             if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
                 setUserMenuOpen(false);
@@ -47,7 +57,7 @@ export default function Header() {
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, []);
+    }, [mounted]);
 
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -58,6 +68,25 @@ export default function Header() {
             setMobileOpen(false);
         }
     };
+
+    // Prevent hydration mismatch
+    if (!mounted) {
+        return (
+            <header className="bg-[#E8DCC8]/95 backdrop-blur-md sticky top-0 z-30 border-b border-black/5 py-2.5">
+                <div className="max-w-7xl mx-auto px-4 md:px-6">
+                    <div className="flex items-center justify-between gap-3">
+                        <nav className="hidden md:flex items-center gap-0.5" />
+                        <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+                            <div className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">
+                                Vrateez
+                            </div>
+                        </Link>
+                        <div className="flex items-center gap-0.5" />
+                    </div>
+                </div>
+            </header>
+        );
+    }
 
     return (
         <header className={`bg-[#E8DCC8]/95 backdrop-blur-md sticky top-0 z-30 border-b border-black/5 transition-all duration-300 ${scrolled ? 'py-2' : 'py-2.5'}`}>
