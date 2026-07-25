@@ -196,13 +196,8 @@ function OrderTrackingContent() {
                         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                             <div className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between">
                                 <div>
-                                    <p className="text-xs text-gray-300">Order DB ID</p>
+                                    <p className="text-xs text-gray-300">Order ID</p>
                                     <p className="font-mono font-semibold text-sm">{order._id}</p>
-                                    {order.orderId && (
-                                        <p className="text-xs text-gray-300 mt-1">
-                                            Order ID: <span className="font-semibold">{order.orderId}</span>
-                                        </p>
-                                    )}
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs text-gray-300">Status</p>
