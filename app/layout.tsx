@@ -6,6 +6,8 @@ import Footer from '../component/layout/Footer';
 import CartSidebar from '../component/cart/CartSidebar';
 import AuthModal from '../component/auth/AuthModal';
 import WhatsAppButton from '../component/ui/WhatsAppButton';
+import CookieConsent from '../component/common/CookieConsent';
+import ActivityTracker from '../component/common/ActivityTracker';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider } from '../context/AuthContext';
 import "./globals.css";
@@ -202,12 +204,14 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CartProvider>
+            <ActivityTracker />
             <Header />
             {children}
             <Footer />
             <CartSidebar />
             <AuthModal />
             <WhatsAppButton />
+            <CookieConsent />
           </CartProvider>
         </AuthProvider>
       </body>

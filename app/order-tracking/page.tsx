@@ -187,7 +187,7 @@ function OrderTrackingContent() {
                         ) : (
                             <TrackingDetails
                                 trackingData={trackingData}
-                                orderId={order.orderId || order._id}
+                                orderId={order._id}
                                 error={trackingError || undefined}
                             />
                         )}
