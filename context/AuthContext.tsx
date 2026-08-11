@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { loginApi, meApi, registerApi, requestEmailOtpApi, verifyEmailOtpApi } from '@/lib/api/authApi';
-import { clearStoredUser, clearToken, getStoredUser, getToken, setStoredUser, setToken } from '@/lib/api/storage';
+import { clearStoredUser, clearToken, getToken, setStoredUser, setToken } from '@/lib/api/storage';
 
 interface User {
     _id?: string;
@@ -36,6 +36,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    // ========== STATE ==========
     const [user, setUser] = useState<User | null>(null);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isSignup, setIsSignup] = useState(false);
@@ -43,6 +44,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [authError, setAuthError] = useState<string | null>(null);
     const [pendingEmailOtp, setPendingEmailOtp] = useState<string | null>(null);
 
+    // ========== HELPER FUNCTIONS ==========
+    const normalizeUser = (userData: any): User => ({
+        id: userData.id || userData._id || '',
+        name: userData.name,
+        email: userData.email,
+        emailVerified: userData.emailVerified,
+        phone: userData.phone,
+        role: userData.role,
+    });
+
+    const setAuthenticatedUser = (userData: any, token: string) => {
+        const normalized = normalizeUser(userData);
+        setToken(token);
+        setStoredUser(normalized);
+        setUser(normalized);
+    };
+
+    // ========== SESSION RESTORATION ==========
     useEffect(() => {
         async function restoreSession() {
             const token = getToken();
@@ -50,13 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             try {
                 const me = await meApi();
-                const normalizedUser: User = {
-                    id: me.id || me._id || '',
-                    name: me.name,
-                    email: me.email,
-                    phone: me.phone,
-                    role: me.role,
-                };
+                const normalizedUser = normalizeUser(me);
                 setUser(normalizedUser);
                 setStoredUser(normalizedUser);
             } catch {
@@ -69,77 +82,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void restoreSession();
     }, []);
 
+    // ========== MODAL CONTROLS ==========
     const openLogin = useCallback(() => {
         setAuthError(null);
         setPendingEmailOtp(null);
         setIsSignup(false);
         setIsLoginOpen(true);
     }, []);
+
     const openSignup = useCallback(() => {
         setAuthError(null);
         setPendingEmailOtp(null);
         setIsSignup(true);
         setIsLoginOpen(true);
     }, []);
-    const closeAuth = useCallback(() => setIsLoginOpen(false), []);
-    const clearError = useCallback(() => setAuthError(null), []);
-    const clearPendingEmailOtp = useCallback(() => setPendingEmailOtp(null), []);
 
+    const closeAuth = useCallback(() => {
+        setIsLoginOpen(false);
+    }, []);
+
+    const clearError = useCallback(() => {
+        setAuthError(null);
+    }, []);
+
+    const clearPendingEmailOtp = useCallback(() => {
+        setPendingEmailOtp(null);
+    }, []);
+
+    // ========== AUTHENTICATION ACTIONS ==========
     const login = useCallback(async (email: string, password: string) => {
         setIsLoading(true);
         setAuthError(null);
+
         try {
             const data = await loginApi({ email, password });
-            const normalizedUser: User = {
-                id: data.user.id || data.user._id || '',
-                name: data.user.name,
-                email: data.user.email,
-                emailVerified: data.user.emailVerified,
-                phone: data.user.phone,
-                role: data.user.role,
-            };
-            setToken(data.token);
-            setStoredUser(normalizedUser);
-            setUser(normalizedUser);
+            setAuthenticatedUser(data.user, data.token);
             setIsLoginOpen(false);
             return true;
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Login failed';
             setAuthError(message);
+
+            // Handle unverified email case
             if (message.toLowerCase().includes('email not verified')) {
                 setPendingEmailOtp(email);
                 try {
                     await requestEmailOtpApi(email);
                 } catch {
-                    // Ignore OTP resend failures here; surface primary login error.
+                    // Ignore OTP resend failures; surface primary login error
                 }
             }
+
             return false;
         } finally {
             setIsLoading(false);
         }
     }, []);
 
-    const signup = useCallback(async (name: string, email: string, password: string, phone?: string) => {
+    const signup = useCallback(async (
+        name: string,
+        email: string,
+        password: string,
+        phone?: string
+    ) => {
         setIsLoading(true);
         setAuthError(null);
+
         try {
-            const data = await registerApi({ name, email, password, phone: phone?.trim() || undefined });
+            const data = await registerApi({
+                name,
+                email,
+                password,
+                phone: phone?.trim() || undefined
+            });
+
+            // Check if email verification is required
             if ('requiresEmailOtp' in data) {
                 setPendingEmailOtp(data.email);
                 return 'otp';
             }
-            const normalizedUser: User = {
-                id: data.user.id || data.user._id || '',
-                name: data.user.name,
-                email: data.user.email,
-                emailVerified: data.user.emailVerified,
-                phone: data.user.phone,
-                role: data.user.role,
-            };
-            setToken(data.token);
-            setStoredUser(normalizedUser);
-            setUser(normalizedUser);
+
+            // User is registered and logged in
+            setAuthenticatedUser(data.user, data.token);
             setIsLoginOpen(false);
             return 'loggedIn';
         } catch (error: unknown) {
@@ -150,9 +174,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    // ========== EMAIL VERIFICATION ==========
     const requestEmailOtp = useCallback(async (email: string) => {
         setIsLoading(true);
         setAuthError(null);
+
         try {
             await requestEmailOtpApi(email);
             return true;
@@ -167,19 +193,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const verifyEmailOtp = useCallback(async (email: string, otp: string) => {
         setIsLoading(true);
         setAuthError(null);
+
         try {
             const data = await verifyEmailOtpApi({ email, otp });
-            const normalizedUser: User = {
-                id: data.user.id || data.user._id || '',
-                name: data.user.name,
-                email: data.user.email,
-                emailVerified: data.user.emailVerified,
-                phone: data.user.phone,
-                role: data.user.role,
-            };
-            setToken(data.token);
-            setStoredUser(normalizedUser);
-            setUser(normalizedUser);
+            setAuthenticatedUser(data.user, data.token);
             setPendingEmailOtp(null);
             setIsLoginOpen(false);
             return true;
@@ -191,31 +208,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    // ========== LOGOUT ==========
     const logout = useCallback(() => {
         clearToken();
         clearStoredUser();
         setUser(null);
     }, []);
 
+    // ========== PROVIDER ==========
     return (
-        <AuthContext.Provider value={{
-            user,
-            isLoginOpen,
-            isSignup,
-            isLoading,
-            authError,
-            pendingEmailOtp,
-            openLogin,
-            openSignup,
-            closeAuth,
-            login,
-            signup,
-            requestEmailOtp,
-            verifyEmailOtp,
-            clearPendingEmailOtp,
-            clearError,
-            logout,
-        }}>
+        <AuthContext.Provider
+            value={{
+                user,
+                isLoginOpen,
+                isSignup,
+                isLoading,
+                authError,
+                pendingEmailOtp,
+                openLogin,
+                openSignup,
+                closeAuth,
+                login,
+                signup,
+                requestEmailOtp,
+                verifyEmailOtp,
+                clearPendingEmailOtp,
+                clearError,
+                logout,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );
