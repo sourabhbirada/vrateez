@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import Header from '../component/layout/Header';
+import AnnouncementBar from '../component/layout/AnnouncementBar';
 import Footer from '../component/layout/Footer';
 import CartSidebar from '../component/cart/CartSidebar';
 import AuthModal from '../component/auth/AuthModal';
@@ -10,6 +11,7 @@ import CookieConsent from '../component/common/CookieConsent';
 import ActivityTracker from '../component/common/ActivityTracker';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider } from '../context/AuthContext';
+import { SettingsProvider } from '../context/SettingsContext';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -203,16 +205,19 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <CartProvider>
-            <ActivityTracker />
-            <Header />
-            {children}
-            <Footer />
-            <CartSidebar />
-            <AuthModal />
-            <WhatsAppButton />
-            <CookieConsent />
-          </CartProvider>
+          <SettingsProvider>
+            <CartProvider>
+              <ActivityTracker />
+              <AnnouncementBar />
+              <Header />
+              {children}
+              <Footer />
+              <CartSidebar />
+              <AuthModal />
+              <WhatsAppButton />
+              <CookieConsent />
+            </CartProvider>
+          </SettingsProvider>
         </AuthProvider>
       </body>
     </html>

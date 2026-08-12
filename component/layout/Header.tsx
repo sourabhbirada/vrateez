@@ -59,21 +59,25 @@ export default function Header() {
         }
     };
 
-    // Reusable logo block — fixed aspect ratio container so the mark + wordmark
-    // never stretch/squish regardless of the source file's native dimensions.
+    // Logo sits on a dark ink plate so the gold mark stays readable on parchment header.
     const Logo = ({ scrolled }: { scrolled: boolean }) => (
         <div
-            className={`relative transition-all duration-300 ${scrolled ? 'h-11 w-[110px]' : 'h-14 w-[150px] md:h-[70px] md:w-[185px]'
-                }`}
+            className={`relative overflow-hidden rounded-xl bg-ink ring-1 ring-ink/40 shadow-sm transition-all duration-300 ${
+                scrolled
+                    ? 'h-11 w-[118px] p-1'
+                    : 'h-14 w-[158px] p-1.5 md:h-[72px] md:w-[196px]'
+            }`}
         >
-            <Image
-                src="/logo.png"
-                alt="Vrateez — nourish your fasting"
-                fill
-                className="object-contain drop-shadow-sm"
-                sizes="(min-width: 768px) 185px, 150px"
-                priority
-            />
+            <div className="relative h-full w-full">
+                <Image
+                    src="/logo.png"
+                    alt="Vrateez — nourish your fasting"
+                    fill
+                    className="object-contain"
+                    sizes="(min-width: 768px) 196px, 158px"
+                    priority
+                />
+            </div>
         </div>
     );
 

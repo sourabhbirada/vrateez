@@ -64,6 +64,22 @@ export interface Product {
     label?: string;
     discountPercent: number;
   }>;
+  customization?: {
+    enabled: boolean;
+    title?: string;
+    options?: Array<{
+      key: string;
+      label: string;
+      type: "select" | "text";
+      required?: boolean;
+      choices?: Array<{
+        label: string;
+        value: string;
+        image?: string;
+        priceDelta?: number;
+      }>;
+    }>;
+  };
 }
 
 export interface Category {
@@ -90,12 +106,118 @@ export interface Banner {
   _id: string;
   title: string;
   subtitle: string;
+  tag?: string;
   cta: string;
   ctaLink: string;
   image: string;
+  video?: string;
   bgColor: string;
+  macros?: Array<{ value: string; label: string }>;
   isActive: boolean;
   position: number;
+}
+
+export interface Deal {
+  _id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  badge: string;
+  cta: string;
+  ctaLink: string;
+  image: string;
+  video: string;
+  price: number;
+  originalPrice: number;
+  items: string[];
+  productSlug?: string;
+  placement: "homepage" | "landing";
+  bgFrom: string;
+  bgTo: string;
+  isActive: boolean;
+  position: number;
+}
+
+export interface Testimonial {
+  _id: string;
+  name: string;
+  role: string;
+  text: string;
+  rating: number;
+  productName?: string;
+  avatar?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface SiteSettings {
+  _id: string;
+  appearance: {
+    brandColors: {
+      primary: string;
+      headerBg: string;
+      footerBg: string;
+      accent: string;
+    };
+    homepageSections: {
+      heroCarousel: boolean;
+      benefitsSection: boolean;
+      newLaunches: boolean;
+      ourProducts: boolean;
+      testimonials: boolean;
+      availableAtPartners: boolean;
+      newsletterSignup: boolean;
+    };
+  };
+  shipping: {
+    freeShippingThreshold: number;
+    standardShippingFee: number;
+    deliveryDays: string;
+    deliveryCoverage: string;
+    paymentMethods: {
+      upi: boolean;
+      cards: boolean;
+      netBanking: boolean;
+      cod: boolean;
+    };
+  };
+  contact: {
+    supportEmail: string;
+    phone: string;
+    whatsapp: string;
+    address: string;
+  };
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+  };
+  socialMedia: {
+    instagram: string;
+    facebook: string;
+    twitter: string;
+    youtube: string;
+  };
+  announcementBar?: {
+    enabled: boolean;
+    text: string;
+    link?: string;
+    bgColor?: string;
+    textColor?: string;
+  };
+  content?: {
+    benefits?: Array<{
+      title: string;
+      subtitle: string;
+      image: string;
+      bgColor?: string;
+    }>;
+    partners?: Array<{
+      name: string;
+      url?: string;
+      logoUrl?: string;
+    }>;
+    featureBadges?: string[];
+  };
 }
 
 export interface CartItem {

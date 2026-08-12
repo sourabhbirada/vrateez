@@ -1,265 +1,263 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ShoppingBag, Gift, Heart, Sparkles, Package, Truck, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, Check, Minus, Package, Plus, Shield, Truck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useRouter } from 'next/navigation';
+import { useSettings } from '@/context/SettingsContext';
+import { getDealsApi } from '@/lib/api/dealApi';
+import { getProductBySlugApi } from '@/lib/api/productApi';
+import type { Deal, Product } from '@/lib/api/types';
 
 export default function RakshaBandhanPage() {
-    const [quantity, setQuantity] = useState(1);
-    const { addToCart, toggleCart } = useCart();
-    const router = useRouter();
+  const [quantity, setQuantity] = useState(1);
+  const [deal, setDeal] = useState<Deal | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { addToCart, toggleCart } = useCart();
+  const { settings } = useSettings();
 
-    const handleAddToCart = () => {
-        // This is a special hamper product
-        const hamperProduct = {
-            _id: 'raksha-bandhan-hamper-2024',
-            name: 'Raksha Bandhan Gift Hamper',
-            slug: 'raksha-bandhan-hamper',
-            price: 379,
-            originalPrice: 499,
-            image: '/rakhsbandhangift.png',
-            category: 'festive',
-            weight: '500g',
-            description: 'Special Raksha Bandhan hamper with energy bars, cookies, rakhi & more',
-            stock: 100,
-            isActive: true,
-        };
-
-        addToCart(hamperProduct, quantity);
-        toggleCart();
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const deals = await getDealsApi('landing');
+        const active = deals[0] || null;
+        if (cancelled) return;
+        setDeal(active);
+        if (active?.productSlug) {
+          try {
+            const p = await getProductBySlugApi(active.productSlug);
+            if (!cancelled) setProduct(p);
+          } catch {
+            if (!cancelled) setProduct(null);
+          }
+        }
+      } catch {
+        if (!cancelled) setDeal(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart({
+        id: product._id,
+        slug: product.slug,
+        name: product.name,
+        image: product.image,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        weight: product.weight,
+        quantity,
+      });
+      toggleCart();
+    }
+  };
+
+  if (loading) {
     return (
-        <main className="min-h-screen bg-gradient-to-br from-[#FFF5E6] to-[#FFE8CC]">
-            {/* Hero Banner */}
-            <div className="relative h-[40vh] md:h-[50vh]">
-                <Image
-                    src="/rakhsbandhangift.png"
-                    alt="Raksha Bandhan Gift Hamper"
-                    fill
-                    className="object-cover"
-                    priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-8 left-0 right-0 text-center text-white">
-                    <h1 className="text-4xl md:text-6xl font-extrabold mb-2">Raksha Bandhan Gift Hamper</h1>
-                    <p className="text-lg md:text-xl italic">Celebrate the bond of love with wellness 🎁</p>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Left: Video & Images */}
-                    <div className="space-y-6">
-                        {/* Video */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-video bg-gray-900">
-                            <video
-                                controls
-                                loop
-                                playsInline
-                                poster="/rakhsbandhangift.png"
-                                className="w-full h-full object-cover"
-                            >
-                                <source src="/rakhevideo.mp4" type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
-
-                        {/* Product Image */}
-                        <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-square">
-                            <Image
-                                src="/rakhsbandhangift.png"
-                                alt="Raksha Bandhan Hamper"
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-
-                        {/* Trust Badges */}
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="bg-white rounded-lg p-4 text-center shadow-md">
-                                <Package className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                                <p className="text-xs font-semibold text-gray-700">Premium<br />Packaging</p>
-                            </div>
-                            <div className="bg-white rounded-lg p-4 text-center shadow-md">
-                                <Truck className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                                <p className="text-xs font-semibold text-gray-700">Fast<br />Delivery</p>
-                            </div>
-                            <div className="bg-white rounded-lg p-4 text-center shadow-md">
-                                <Shield className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                                <p className="text-xs font-semibold text-gray-700">100%<br />Authentic</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right: Details & Order */}
-                    <div className="space-y-6">
-                        {/* Limited Time Badge */}
-                        <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                            </span>
-                            🕐 LIMITED TIME OFFER
-                        </div>
-
-                        {/* Title & Description */}
-                        <div>
-                            <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-                                Raksha Bandhan Gift Hamper
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                To health and happiness, Vrateez brings you endless siblings love wrapped in delicious treats. Each hamper is carefully curated with our premium healthy snacks, a beautiful Rakhi, and traditional Roli Chawal — the perfect gift to celebrate the sacred bond of Raksha Bandhan.
-                            </p>
-                        </div>
-
-                        {/* What's Inside - Detailed */}
-                        <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-orange-200">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Gift className="w-6 h-6 text-orange-500" />
-                                <h3 className="text-lg font-bold text-gray-900">Hamper Contains:</h3>
-                            </div>
-                            <ul className="space-y-3">
-                                <li className="flex items-start gap-3 border-b border-gray-100 pb-3">
-                                    <span className="text-orange-500 mt-0.5 flex-shrink-0 text-lg">✓</span>
-                                    <div>
-                                        <span className="text-gray-900 font-semibold block">1 Energy Bar</span>
-                                        <p className="text-xs text-gray-500">Rich in protein, fiber & minerals. Perfect energy booster for your sibling's active lifestyle.</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3 border-b border-gray-100 pb-3">
-                                    <span className="text-orange-500 mt-0.5 flex-shrink-0 text-lg">✓</span>
-                                    <div>
-                                        <span className="text-gray-900 font-semibold block">2 Multigrain Coconut Cookies</span>
-                                        <p className="text-xs text-gray-500">Crunchy, nutritious & delicious. Made with wholesome multigrain flour and real coconut.</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3 border-b border-gray-100 pb-3">
-                                    <span className="text-orange-500 mt-0.5 flex-shrink-0 text-lg">✓</span>
-                                    <div>
-                                        <span className="text-gray-900 font-semibold block">2 Multigrain Dry Fruit Cookies</span>
-                                        <p className="text-xs text-gray-500">Packed with real dry fruits, almonds & cashews. A healthy indulgence.</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3 border-b border-gray-100 pb-3">
-                                    <span className="text-orange-500 mt-0.5 flex-shrink-0 text-lg">✓</span>
-                                    <div>
-                                        <span className="text-gray-900 font-semibold block">40gm Millet Crunchy Bites</span>
-                                        <p className="text-xs text-gray-500">Guilt-free snacking delight made from nutritious millets. Zero added sugar.</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3 border-b border-gray-100 pb-3">
-                                    <span className="text-orange-500 mt-0.5 flex-shrink-0 text-lg">✓</span>
-                                    <div>
-                                        <span className="text-gray-900 font-semibold block">Beautiful Rakhi 📿</span>
-                                        <p className="text-xs text-gray-500">Traditional & elegant design to grace your sibling's wrist.</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="text-orange-500 mt-0.5 flex-shrink-0 text-lg">✓</span>
-                                    <div>
-                                        <span className="text-gray-900 font-semibold block">Roli & Chawal 🎨</span>
-                                        <p className="text-xs text-gray-500">Complete the traditional Raksha Bandhan ceremony with sacred Roli and Chawal.</p>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* Why This Gift is Special */}
-                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Heart className="w-5 h-5 text-orange-600" />
-                                <h4 className="font-bold text-gray-900">Why This Gift is Special:</h4>
-                            </div>
-                            <ul className="space-y-2 text-sm text-gray-700">
-                                <li className="flex items-start gap-2">
-                                    <Sparkles size={16} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span><strong>Healthy & Delicious:</strong> Perfect for health-conscious siblings who care about what they eat</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Sparkles size={16} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span><strong>Zero Added Sugar:</strong> High in protein & fiber, guilt-free snacking</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Sparkles size={16} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span><strong>Premium Packaging:</strong> Beautiful presentation perfect for gifting</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Sparkles size={16} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span><strong>Complete Set:</strong> Everything you need for the Raksha Bandhan celebration</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Sparkles size={16} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span><strong>Express Love with Wellness:</strong> Show you care about their health and happiness</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* Pricing & Order */}
-                        <div className="bg-white rounded-xl p-6 shadow-xl border-2 border-orange-300">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl font-black text-orange-600">₹379</span>
-                                    <span className="text-2xl text-gray-400 line-through">₹499</span>
-                                </div>
-                                <div className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">
-                                    SAVE ₹120
-                                </div>
-                            </div>
-
-                            {/* Quantity */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Quantity:</label>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="w-10 h-10 rounded-lg border-2 border-gray-300 hover:border-orange-500 text-gray-700 font-bold hover:bg-orange-50 transition"
-                                    >
-                                        −
-                                    </button>
-                                    <span className="text-xl font-bold text-gray-900 min-w-[3rem] text-center">{quantity}</span>
-                                    <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="w-10 h-10 rounded-lg border-2 border-gray-300 hover:border-orange-500 text-gray-700 font-bold hover:bg-orange-50 transition"
-                                    >
-                                        +
-                                    </button>
-                                    <span className="text-sm text-gray-500 ml-2">
-                                        Total: <span className="font-bold text-orange-600">₹{379 * quantity}</span>
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Add to Cart Button */}
-                            <button
-                                onClick={handleAddToCart}
-                                className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-xl text-lg font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-                            >
-                                <ShoppingBag size={20} />
-                                Add to Cart & Order Now
-                            </button>
-
-                            <div className="mt-4 space-y-2 text-sm text-gray-600">
-                                <p className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
-                                    Free shipping on orders above ₹499
-                                </p>
-                                <p className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
-                                    Delivery before Raksha Bandhan
-                                </p>
-                                <p className="flex items-center gap-2">
-                                    <span className="text-green-500">✓</span>
-                                    Cash on Delivery available
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+      <main className="min-h-screen bg-ink flex items-center justify-center">
+        <p className="text-parchment/50 text-sm font-label tracking-widest uppercase">Loading offer…</p>
+      </main>
     );
+  }
+
+  if (!deal) {
+    return (
+      <main className="min-h-screen bg-ink flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-parchment/70">No festive landing deal is active right now.</p>
+        <Link href="/shop" className="text-millet font-semibold underline underline-offset-4">
+          Browse shop
+        </Link>
+      </main>
+    );
+  }
+
+  const price = product?.price ?? deal.price;
+  const originalPrice = product?.originalPrice ?? deal.originalPrice;
+  const savings = originalPrice > price ? originalPrice - price : 0;
+  const freeShip = settings?.shipping?.freeShippingThreshold ?? 499;
+  const ctaHref = deal.productSlug
+    ? `/product/${deal.productSlug}`
+    : deal.ctaLink || '/shop';
+
+  return (
+    <main className="min-h-screen bg-ink text-parchment">
+      <section className="relative h-[42vh] md:h-[52vh] overflow-hidden">
+        {deal.image ? (
+          <Image src={deal.image} alt={deal.title} fill className="object-cover" priority />
+        ) : (
+          <div className="absolute inset-0 bg-basil" />
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-ink via-ink/55 to-ink/20" />
+        <div className="absolute inset-0 grain-overlay opacity-[0.06] mix-blend-overlay" />
+        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-10 md:pb-14">
+          <div className="max-w-7xl mx-auto">
+            {deal.badge ? (
+              <span className="inline-flex mb-4 font-label text-[10px] tracking-[0.22em] uppercase text-millet border border-millet/35 px-3 py-1.5">
+                {deal.badge}
+              </span>
+            ) : null}
+            <h1 className="font-display italic text-4xl md:text-6xl leading-[1.05] tracking-[-0.01em] max-w-3xl">
+              {deal.title}
+            </h1>
+            {deal.subtitle ? (
+              <p className="mt-3 text-base md:text-lg text-parchment/65 max-w-xl">{deal.subtitle}</p>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          aria-hidden="true"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 15% 30%, #E4A93D 0%, transparent 40%), radial-gradient(circle at 90% 80%, #C4711F 0%, transparent 35%)',
+          }}
+        />
+
+        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+          <div className="space-y-6">
+            <div className="relative aspect-video overflow-hidden rounded-sm ring-1 ring-parchment/15 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.65)] bg-basil">
+              {deal.video ? (
+                <video
+                  controls
+                  loop
+                  playsInline
+                  poster={deal.image || undefined}
+                  className="absolute inset-0 h-full w-full object-cover"
+                >
+                  <source src={deal.video} type="video/mp4" />
+                </video>
+              ) : deal.image ? (
+                <Image src={deal.image} alt={deal.title} fill className="object-cover" />
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Package, label: 'Premium packaging' },
+                { icon: Truck, label: 'Fast delivery' },
+                { icon: Shield, label: '100% authentic' },
+              ].map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex flex-col items-center gap-2 py-4 px-2 text-center ring-1 ring-parchment/10 bg-parchment/[0.03]"
+                >
+                  <Icon className="w-5 h-5 text-millet" strokeWidth={1.75} />
+                  <p className="font-label text-[9px] tracking-[0.12em] uppercase text-parchment/55 leading-snug">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            {deal.description ? (
+              <p className="text-[15px] text-parchment/60 leading-relaxed">{deal.description}</p>
+            ) : null}
+
+            {deal.items?.length > 0 ? (
+              <div>
+                <p className="font-label text-[10px] tracking-[0.18em] uppercase text-millet/80 mb-4">
+                  Includes
+                </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                  {deal.items.map((item) => (
+                    <li key={item} className="flex items-center gap-2.5 text-sm text-parchment/80">
+                      <Check size={14} className="shrink-0 text-millet" strokeWidth={2.5} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <div className="border-t border-parchment/10 pt-6 space-y-6">
+              {price > 0 ? (
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-display text-4xl md:text-5xl text-millet leading-none">₹{price}</span>
+                    {originalPrice > price ? (
+                      <span className="text-lg text-parchment/35 line-through">₹{originalPrice}</span>
+                    ) : null}
+                  </div>
+                  {savings > 0 ? (
+                    <span className="mb-1 font-label text-[10px] tracking-[0.14em] uppercase bg-basil text-parchment px-3 py-1.5 ring-1 ring-parchment/10">
+                      Save ₹{savings}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {product ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <span className="font-label text-[10px] tracking-[0.16em] uppercase text-parchment/45">
+                      Quantity
+                    </span>
+                    <div className="inline-flex items-center ring-1 ring-parchment/20">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-10 h-10 flex items-center justify-center text-parchment/70 hover:bg-parchment/10 transition"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="w-12 text-center font-semibold text-parchment">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-10 h-10 flex items-center justify-center text-parchment/70 hover:bg-parchment/10 transition"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <span className="text-sm text-parchment/50">
+                      Total <span className="text-millet font-semibold">₹{price * quantity}</span>
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="group inline-flex items-center gap-2.5 bg-turmeric text-parchment px-7 py-3.5 font-semibold text-sm shadow-md shadow-turmeric/20 transition-all duration-200 hover:bg-clay"
+                  >
+                    Add to Cart
+                    <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href={ctaHref}
+                  className="group inline-flex items-center gap-2.5 bg-turmeric text-parchment px-7 py-3.5 font-semibold text-sm shadow-md shadow-turmeric/20 transition-all duration-200 hover:bg-clay"
+                >
+                  {deal.cta || 'View offer'}
+                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              )}
+
+              <p className="text-sm text-parchment/45 flex items-center gap-2">
+                <Check size={14} className="text-millet" strokeWidth={2.5} />
+                Free shipping on orders above ₹{freeShip}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }

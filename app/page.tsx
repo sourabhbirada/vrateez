@@ -1,11 +1,5 @@
 import type { Metadata } from 'next';
-import HeroSection from '@/component/home/HeroSection';
-import RakshaBandhanPreview from '@/component/home/RakshaBandhanPreview';
-import BenefitsSection from '@/component/home/BenefitsSection';
-import ProductsSection from '@/component/home/ProductsSection';
-import TestimonialsSection from '@/component/home/TestimonialsSection';
-import OurProductsSection from '@/component/home/OurProductsSection';
-import AvailableAtSection from '@/component/home/AvailableAtSection';
+import HomePageClient from './HomePageClient';
 
 export const metadata: Metadata = {
   title: "Buy Healthy Protein Cookies & Vrat Snacks Online in India",
@@ -18,15 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return (
-    <main>
-      <HeroSection />
-      <RakshaBandhanPreview />
-      <BenefitsSection />
-      <ProductsSection />
-      <TestimonialsSection />
-      <OurProductsSection />
-      <AvailableAtSection />
-    </main>
-  );
+  return <HomePageClient />;
 }

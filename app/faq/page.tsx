@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { getFaqsApi } from '@/lib/api/faqApi';
 import type { Faq } from '@/lib/api/types';
+import { useSettings, whatsappLink } from '@/context/SettingsContext';
 
 // Brand-adjacent variants used to distinguish category tabs — not semantic status colors.
 const CATEGORY_COLORS = [
@@ -37,6 +38,9 @@ function AccordionItem({ question, answer }: { question: string; answer: string 
 export default function FaqPage() {
     const [faqs, setFaqs] = useState<Faq[]>([]);
     const [activeCategory, setActiveCategory] = useState<string>('');
+    const { settings } = useSettings();
+    const wa = whatsappLink(settings?.contact?.whatsapp);
+    const email = settings?.contact?.supportEmail;
 
     useEffect(() => {
         async function loadFaqs() {
@@ -123,20 +127,24 @@ export default function FaqPage() {
                     <h3 className="font-display italic text-2xl text-parchment mb-3">Still have questions?</h3>
                     <p className="text-parchment/50 mb-6">We&apos;re happy to help. Reach out to us anytime.</p>
                     <div className="flex flex-wrap justify-center gap-4">
-                        <a
-                            href="mailto:support@virteez.com"
-                            className="bg-turmeric text-parchment px-8 py-3 rounded-full font-bold text-sm hover:bg-clay transition"
-                        >
-                            Email us
-                        </a>
-                        <a
-                            href="https://wa.me/919407230914"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-basil text-parchment px-8 py-3 rounded-full font-bold text-sm hover:bg-basil/80 transition"
-                        >
-                            WhatsApp
-                        </a>
+                        {email ? (
+                            <a
+                                href={`mailto:${email}`}
+                                className="bg-turmeric text-parchment px-8 py-3 rounded-full font-bold text-sm hover:bg-clay transition"
+                            >
+                                Email us
+                            </a>
+                        ) : null}
+                        {wa ? (
+                            <a
+                                href={wa}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-basil text-parchment px-8 py-3 rounded-full font-bold text-sm hover:bg-basil/80 transition"
+                            >
+                                WhatsApp
+                            </a>
+                        ) : null}
                     </div>
                 </div>
             </section>

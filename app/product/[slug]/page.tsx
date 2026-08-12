@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Star, ShoppingCart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw, ExternalLink } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 import { getProductBySlugApi, getProductsApi } from '@/lib/api/productApi';
 import type { Product as ApiProduct, ProductCategory } from '@/lib/api/types';
 import { getProductCategoryLabel } from '@/lib/api/types';
@@ -30,6 +31,7 @@ interface ProductView {
     nutritionHighlights: string[];
     amazonUrl?: string;
     packOptions?: PackOption[];
+    customization?: ApiProduct['customization'];
 }
 
 function mapApiProductToView(p: ApiProduct): ProductView {
@@ -52,6 +54,7 @@ function mapApiProductToView(p: ApiProduct): ProductView {
         nutritionHighlights: p.nutritionHighlights,
         amazonUrl: p.amazonUrl,
         packOptions: p.packOptions || [],
+        customization: p.customization,
     };
 }
 
@@ -64,10 +67,13 @@ export default function ProductPage() {
     const [allProducts, setAllProducts] = useState<ProductView[]>([]);
     const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
+    const { settings } = useSettings();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [selectedPackUnits, setSelectedPackUnits] = useState(1);
     const [activeTab, setActiveTab] = useState<'description' | 'nutrition' | 'ingredients'>('description');
+    const [customSelections, setCustomSelections] = useState<Record<string, string>>({});
+    const [customError, setCustomError] = useState('');
 
     useEffect(() => {
         async function loadProduct() {
@@ -80,6 +86,15 @@ export default function ProductPage() {
 
                 setProduct(mapApiProductToView(apiProduct));
                 setAllProducts(apiList.items.map(mapApiProductToView));
+                const defaults: Record<string, string> = {};
+                apiProduct.customization?.options?.forEach((opt) => {
+                    if (opt.type === 'select' && opt.choices?.[0]) {
+                        defaults[opt.key] = opt.choices[0].value;
+                    } else {
+                        defaults[opt.key] = '';
+                    }
+                });
+                setCustomSelections(defaults);
             } catch (error) {
                 console.error('Error loading product:', error);
                 setProduct(null);
@@ -108,18 +123,52 @@ export default function ProductPage() {
     }
 
     const hasPackOptions = (product.packOptions?.length ?? 0) > 0;
+    const customizationEnabled = Boolean(product.customization?.enabled && product.customization.options?.length);
     const orderQuantity = hasPackOptions ? selectedPackUnits : quantity;
-    const unitPrice = getEffectiveUnitPrice(product, orderQuantity);
-    const lineTotal = getPackTotal(product, orderQuantity);
+    const customizationDelta = (product.customization?.options || []).reduce((sum, opt) => {
+        if (opt.type !== 'select') return sum;
+        const selected = customSelections[opt.key];
+        const choice = opt.choices?.find((c) => c.value === selected);
+        return sum + (choice?.priceDelta || 0);
+    }, 0);
+    const unitPrice = getEffectiveUnitPrice(product, orderQuantity) + customizationDelta;
+    const lineTotal = getPackTotal(
+        { ...product, price: product.price + customizationDelta },
+        orderQuantity
+    );
 
     const handleAddToCart = () => {
+        if (customizationEnabled) {
+            for (const opt of product.customization?.options || []) {
+                if (opt.required && !String(customSelections[opt.key] || '').trim()) {
+                    setCustomError(`Please choose: ${opt.label}`);
+                    return;
+                }
+            }
+        }
+        setCustomError('');
+
+        const customParts = (product.customization?.options || [])
+            .map((opt) => {
+                const raw = customSelections[opt.key];
+                if (!raw) return null;
+                if (opt.type === 'select') {
+                    const choice = opt.choices?.find((c) => c.value === raw);
+                    return `${opt.label}: ${choice?.label || raw}`;
+                }
+                return `${opt.label}: ${raw}`;
+            })
+            .filter(Boolean);
+
+        const customSuffix = customParts.length ? ` (${customParts.join(', ')})` : '';
+
         addToCart({
             id: String(product.id),
             slug: product.slug,
-            name: product.name,
+            name: `${product.name}${customSuffix}`,
             image: product.image,
             price: unitPrice,
-            originalPrice: product.originalPrice,
+            originalPrice: product.originalPrice + customizationDelta,
             weight: product.weight,
             quantity: orderQuantity,
         });
@@ -234,10 +283,13 @@ export default function ProductPage() {
                                     }`}
                                 >
                                     <p className="font-semibold text-ink">Single pack</p>
-                                    <p className="text-sm text-ink/60 mt-1">1 pc · ₹{product.price}</p>
+                                    <p className="text-sm text-ink/60 mt-1">1 pc · ₹{product.price + customizationDelta}</p>
                                 </button>
                                 {product.packOptions?.map((pack) => {
-                                    const total = getPackTotal(product, pack.units);
+                                    const total = getPackTotal(
+                                        { ...product, price: product.price + customizationDelta },
+                                        pack.units
+                                    );
                                     return (
                                         <button
                                             key={pack.units}
@@ -264,6 +316,80 @@ export default function ProductPage() {
                                     );
                                 })}
                             </div>
+                        </div>
+                    )}
+
+                    {customizationEnabled && (
+                        <div className="mb-6 space-y-5">
+                            <p className="text-sm font-semibold text-ink">
+                                {product.customization?.title || 'Customize your product'}
+                            </p>
+                            {(product.customization?.options || []).map((opt) => (
+                                <div key={opt.key}>
+                                    <p className="text-sm text-ink/70 mb-2">
+                                        {opt.label}
+                                        {opt.required ? <span className="text-clay"> *</span> : null}
+                                    </p>
+                                    {opt.type === 'text' ? (
+                                        <input
+                                            type="text"
+                                            value={customSelections[opt.key] || ''}
+                                            onChange={(e) =>
+                                                setCustomSelections((prev) => ({
+                                                    ...prev,
+                                                    [opt.key]: e.target.value,
+                                                }))
+                                            }
+                                            placeholder={`Enter ${opt.label.toLowerCase()}`}
+                                            className="w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-turmeric/30 focus:border-turmeric"
+                                        />
+                                    ) : (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            {(opt.choices || []).map((choice) => {
+                                                const selected = customSelections[opt.key] === choice.value;
+                                                return (
+                                                    <button
+                                                        key={choice.value}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setCustomSelections((prev) => ({
+                                                                ...prev,
+                                                                [opt.key]: choice.value,
+                                                            }))
+                                                        }
+                                                        className={`rounded-xl border p-3 text-left transition ${
+                                                            selected
+                                                                ? 'border-turmeric bg-turmeric/8'
+                                                                : 'border-ink/15 hover:border-ink/30'
+                                                        }`}
+                                                    >
+                                                        {choice.image ? (
+                                                            <div className="relative w-full aspect-square mb-2 rounded-lg overflow-hidden bg-ink/5">
+                                                                <Image
+                                                                    src={choice.image}
+                                                                    alt={choice.label}
+                                                                    fill
+                                                                    className="object-cover"
+                                                                />
+                                                            </div>
+                                                        ) : null}
+                                                        <p className="font-semibold text-ink text-sm">{choice.label}</p>
+                                                        {(choice.priceDelta || 0) !== 0 ? (
+                                                            <p className="text-xs text-ink/50 mt-1">
+                                                                {choice.priceDelta! > 0 ? '+' : ''}₹
+                                                                {choice.priceDelta}
+                                                            </p>
+                                                        ) : null}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {customError ? (
+                                <p className="text-sm text-clay">{customError}</p>
+                            ) : null}
                         </div>
                     )}
 
@@ -321,7 +447,9 @@ export default function ProductPage() {
                     <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className="flex flex-col items-center text-center p-3 bg-ink/5 rounded-xl">
                             <Truck size={20} className="text-ink/60 mb-1" />
-                            <span className="text-xs font-medium text-ink/60">Free Shipping ₹499+</span>
+                            <span className="text-xs font-medium text-ink/60">
+                                Free Shipping ₹{settings?.shipping?.freeShippingThreshold ?? 499}+
+                            </span>
                         </div>
                         <div className="flex flex-col items-center text-center p-3 bg-ink/5 rounded-xl">
                             <Shield size={20} className="text-ink/60 mb-1" />

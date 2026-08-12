@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle, CreditCard, Loader2, Phone, Truck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
 import { createOrderApi, createGuestOrderApi, confirmGuestCodOrderApi } from '@/lib/api/orderApi';
 import { createPaymentIntentApi, verifyPaymentApi, confirmCodOrderApi, createGuestPaymentApi, verifyGuestPaymentApi } from '@/lib/api/paymentApi';
 import { validateCouponApi } from '@/lib/api/couponApi';
@@ -52,7 +53,37 @@ function digitsOnlyPhone(value: string): string {
     return d;
 }
 
-const inputCls = 'w-full border border-ink/15 rounded-lg px-4 py-3 focus:ring-2 focus:ring-turmeric/40 focus:border-turmeric outline-none transition bg-white/70 text-ink';
+const inputCls =
+    'w-full border border-ink/12 rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-turmeric/35 focus:border-turmeric outline-none transition bg-white text-ink placeholder:text-ink/30 shadow-[inset_0_1px_0_rgba(36,31,22,0.02)]';
+
+function SectionCard({
+    step,
+    title,
+    subtitle,
+    children,
+}: {
+    step?: string;
+    title: string;
+    subtitle?: string;
+    children: ReactNode;
+}) {
+    return (
+        <div className="rounded-2xl border border-ink/10 bg-white shadow-[0_10px_40px_-24px_rgba(36,31,22,0.35)] overflow-hidden">
+            <div className="px-6 py-4 border-b border-ink/8 bg-linear-to-r from-parchment/80 to-white flex items-center gap-3">
+                {step ? (
+                    <span className="w-7 h-7 rounded-full bg-ink text-parchment text-xs font-bold flex items-center justify-center shrink-0">
+                        {step}
+                    </span>
+                ) : null}
+                <div>
+                    <h2 className="font-display italic text-lg text-ink leading-tight">{title}</h2>
+                    {subtitle ? <p className="text-xs text-ink/45 mt-0.5">{subtitle}</p> : null}
+                </div>
+            </div>
+            <div className="p-6">{children}</div>
+        </div>
+    );
+}
 
 function CheckoutForm({
     items,
@@ -66,6 +97,7 @@ function CheckoutForm({
     user: ReturnType<typeof useAuth>['user'];
 }) {
     const router = useRouter();
+    const { settings } = useSettings();
 
     const [isLoading, setIsLoading] = useState(false);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
@@ -103,7 +135,9 @@ function CheckoutForm({
     }, [user?.phone]);
 
     const subtotal = totalPrice;
-    const shippingCharge = subtotal >= 499 ? 0 : 49;
+    const freeShippingThreshold = settings?.shipping?.freeShippingThreshold ?? 499;
+    const standardShippingFee = settings?.shipping?.standardShippingFee ?? 49;
+    const shippingCharge = subtotal >= freeShippingThreshold ? 0 : standardShippingFee;
     const discountAmount = appliedCoupon?.discountAmount || 0;
     const total = Math.max(subtotal - discountAmount + shippingCharge, 0);
 
@@ -356,14 +390,13 @@ function CheckoutForm({
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+            <div className="lg:col-span-3 space-y-5">
                 {!user && (
-                    <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10">
-                        <h2 className="font-display italic text-lg text-ink mb-4">Contact Information</h2>
+                    <SectionCard step="1" title="Contact Information" subtitle="We'll send order updates here">
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-ink/70 mb-1">
+                                <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                     Full Name *
                                 </label>
                                 <input
@@ -371,12 +404,12 @@ function CheckoutForm({
                                     value={guestInfo.name}
                                     onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
                                     className={inputCls}
-                                    placeholder="John Doe"
+                                    placeholder="Your full name"
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-ink/70 mb-1">
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                         Email *
                                     </label>
                                     <input
@@ -384,11 +417,11 @@ function CheckoutForm({
                                         value={guestInfo.email}
                                         onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
                                         className={inputCls}
-                                        placeholder="john@example.com"
+                                        placeholder="you@email.com"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-ink/70 mb-1">
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                         Phone *
                                     </label>
                                     <input
@@ -401,14 +434,17 @@ function CheckoutForm({
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </SectionCard>
                 )}
 
-                <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10">
-                    <h2 className="font-display italic text-lg text-ink mb-4">Shipping Address</h2>
+                <SectionCard
+                    step={user ? '1' : '2'}
+                    title="Shipping Address"
+                    subtitle="Where should we deliver your order?"
+                >
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-ink/70 mb-1">
+                            <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                 Address Line 1 *
                             </label>
                             <input
@@ -420,7 +456,7 @@ function CheckoutForm({
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-ink/70 mb-1">
+                            <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                 Address Line 2
                             </label>
                             <input
@@ -433,7 +469,7 @@ function CheckoutForm({
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-ink/70 mb-1">
+                                <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                     City *
                                 </label>
                                 <input
@@ -445,7 +481,7 @@ function CheckoutForm({
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-ink/70 mb-1">
+                                <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                     State *
                                 </label>
                                 <input
@@ -457,7 +493,7 @@ function CheckoutForm({
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-ink/70 mb-1">
+                                <label className="block text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
                                     Pincode *
                                 </label>
                                 <input
@@ -471,16 +507,14 @@ function CheckoutForm({
                             </div>
                         </div>
                     </div>
-                </div>
+                </SectionCard>
 
-                <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10">
-                    <h2 className="font-display italic text-lg text-ink mb-1">Payment</h2>
-                    <p className="text-sm text-ink/50 mb-4">
-                        Online payments open the Razorpay window directly (all methods inside Razorpay). Choose COD if you
-                        prefer cash on delivery.
-                    </p>
-
-                    <div className="border border-ink/15 rounded-2xl overflow-hidden">
+                <SectionCard
+                    step={user ? '2' : '3'}
+                    title="Payment"
+                    subtitle="Pay online via Razorpay or choose Cash on Delivery"
+                >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {PAYMENT_MODES.map((mode) => {
                             const Icon = mode.icon;
                             const selected = paymentMode === mode.id;
@@ -488,8 +522,10 @@ function CheckoutForm({
                             return (
                                 <label
                                     key={mode.id}
-                                    className={`flex items-center gap-4 p-4 cursor-pointer transition border-b border-ink/10 last:border-b-0 ${
-                                        selected ? 'bg-turmeric/8' : 'bg-white/40 hover:bg-ink/5'
+                                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition border ${
+                                        selected
+                                            ? 'border-turmeric bg-turmeric/8 ring-1 ring-turmeric/30'
+                                            : 'border-ink/10 bg-parchment/40 hover:border-ink/20'
                                     }`}
                                 >
                                     <input
@@ -498,12 +534,14 @@ function CheckoutForm({
                                         value={mode.id}
                                         checked={selected}
                                         onChange={() => setPaymentMode(mode.id)}
-                                        className="h-5 w-5 accent-turmeric"
+                                        className="mt-1 h-4 w-4 accent-turmeric"
                                     />
-                                    <Icon size={21} className={selected ? 'text-clay' : 'text-ink/50'} />
                                     <div>
-                                        <p className="font-semibold text-ink leading-tight">{mode.label}</p>
-                                        <p className="text-sm text-ink/50">{mode.description}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Icon size={18} className={selected ? 'text-clay' : 'text-ink/45'} />
+                                            <p className="font-semibold text-ink text-sm">{mode.label}</p>
+                                        </div>
+                                        <p className="text-xs text-ink/50 leading-relaxed">{mode.description}</p>
                                     </div>
                                 </label>
                             );
@@ -511,10 +549,10 @@ function CheckoutForm({
                     </div>
 
                     {user && paymentMode === 'online' && (
-                        <div className="mt-4">
-                            <label className="flex items-center gap-2 text-sm font-medium text-ink/70 mb-1">
-                                <Phone size={16} className="text-ink/50" />
-                                Mobile for Razorpay and order updates *
+                        <div className="mt-5">
+                            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink/55 mb-1.5">
+                                <Phone size={14} className="text-ink/45" />
+                                Mobile for Razorpay & updates *
                             </label>
                             <input
                                 type="tel"
@@ -524,60 +562,60 @@ function CheckoutForm({
                                 placeholder="9876543210"
                                 autoComplete="tel"
                             />
-                            <p className="text-xs text-ink/40 mt-1">Saved to your account when you place the order.</p>
+                            <p className="text-xs text-ink/40 mt-1.5">Saved to your account when you place the order.</p>
                         </div>
                     )}
-                </div>
+                </SectionCard>
             </div>
 
-            <div className="lg:col-span-1">
-                <div className="bg-white/70 rounded-2xl p-6 shadow-sm border border-ink/10 sticky top-8">
-                    <h2 className="font-display italic text-lg text-ink mb-4">Order Summary</h2>
+            <div className="lg:col-span-2">
+                <div className="rounded-2xl border border-ink/10 bg-white shadow-[0_18px_50px_-28px_rgba(36,31,22,0.45)] sticky top-24 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-ink/8 bg-ink text-parchment">
+                        <h2 className="font-display italic text-lg">Order Summary</h2>
+                        <p className="text-xs text-parchment/55 mt-0.5">{items.length} item{items.length === 1 ? '' : 's'} in cart</p>
+                    </div>
 
-                    <div className="space-y-4 max-h-64 overflow-y-auto mb-4">
-                        {items.map((item) => (
-                            <div key={item.id} className="flex gap-3">
-                                <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
-                                    <Image
-                                        src={item.image}
-                                        alt={item.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-ink truncate">{item.name}</p>
-                                    <p className="text-xs text-ink/50">Qty: {item.quantity}</p>
-                                    <p className="text-sm font-semibold text-ink">
+                    <div className="p-6">
+                        <div className="space-y-3 max-h-56 overflow-y-auto mb-5 pr-1">
+                            {items.map((item) => (
+                                <div key={item.id} className="flex gap-3">
+                                    <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-ink/8 bg-parchment">
+                                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-ink truncate">{item.name}</p>
+                                        <p className="text-xs text-ink/45">Qty {item.quantity}</p>
+                                    </div>
+                                    <p className="text-sm font-semibold text-ink shrink-0">
                                         ₹{item.price * item.quantity}
                                     </p>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    <div className="border-t border-ink/10 pt-4 space-y-2">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-ink/70">Coupon Code</label>
+                        <div className="space-y-2 mb-4">
+                            <label className="text-xs font-semibold uppercase tracking-wide text-ink/55">
+                                Coupon Code
+                            </label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
                                     value={couponInput}
                                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                                     placeholder="Enter coupon"
-                                    className="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-turmeric/40 focus:border-turmeric outline-none bg-white/70 text-ink"
+                                    className="flex-1 border border-ink/12 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-turmeric/35 focus:border-turmeric outline-none bg-white text-ink"
                                 />
                                 <button
                                     type="button"
                                     onClick={handleApplyCoupon}
                                     disabled={isApplyingCoupon}
-                                    className="px-4 py-2 rounded-lg bg-ink text-parchment text-sm font-semibold hover:bg-turmeric disabled:opacity-50"
+                                    className="px-4 py-2.5 rounded-xl bg-ink text-parchment text-sm font-semibold hover:bg-basil disabled:opacity-50 transition"
                                 >
-                                    {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                                    {isApplyingCoupon ? '…' : 'Apply'}
                                 </button>
                             </div>
                             {appliedCoupon && (
-                                <div className="flex items-center justify-between bg-basil/10 border border-basil/25 rounded-lg px-3 py-2 text-sm">
+                                <div className="flex items-center justify-between bg-basil/10 border border-basil/20 rounded-xl px-3 py-2 text-sm">
                                     <span className="text-basil font-medium">
                                         {appliedCoupon.couponCode} applied
                                         {appliedCoupon.description && ` · ${appliedCoupon.description}`}
@@ -593,66 +631,68 @@ function CheckoutForm({
                             )}
                         </div>
 
-                        <div className="flex justify-between text-sm">
-                            <span className="text-ink/60">Subtotal</span>
-                            <span className="font-medium text-ink">₹{subtotal}</span>
-                        </div>
-                        {discountAmount > 0 && (
+                        <div className="space-y-2.5 border-t border-ink/8 pt-4">
                             <div className="flex justify-between text-sm">
-                                <span className="text-basil">Discount</span>
-                                <span className="font-medium text-basil">-₹{discountAmount}</span>
+                                <span className="text-ink/55">Subtotal</span>
+                                <span className="font-medium text-ink">₹{subtotal}</span>
+                            </div>
+                            {discountAmount > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-basil">Discount</span>
+                                    <span className="font-medium text-basil">-₹{discountAmount}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between text-sm">
+                                <span className="text-ink/55">Shipping</span>
+                                <span className={`font-medium ${shippingCharge === 0 ? 'text-basil' : 'text-ink'}`}>
+                                    {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
+                                </span>
+                            </div>
+                            {shippingCharge > 0 && (
+                                <p className="text-xs text-turmeric bg-turmeric/8 rounded-lg px-2.5 py-1.5">
+                                    Add ₹{Math.max(freeShippingThreshold - subtotal, 0)} more for free shipping
+                                </p>
+                            )}
+                            <div className="flex justify-between text-lg font-bold pt-3 border-t border-ink/8 text-ink">
+                                <span>Total</span>
+                                <span>₹{total}</span>
+                            </div>
+                        </div>
+
+                        {infoMessage && (
+                            <div className="mt-4 p-3 bg-ink/5 border border-ink/10 rounded-xl text-ink/80 text-sm">
+                                {infoMessage}
                             </div>
                         )}
-                        <div className="flex justify-between text-sm">
-                            <span className="text-ink/60">Shipping</span>
-                            <span className={`font-medium ${shippingCharge === 0 ? 'text-basil' : 'text-ink'}`}>
-                                {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
-                            </span>
-                        </div>
-                        {shippingCharge > 0 && (
-                            <p className="text-xs text-turmeric">
-                                Add ₹{499 - subtotal} more for free shipping!
-                            </p>
+
+                        {error && (
+                            <div className="mt-4 p-3 bg-clay/10 border border-clay/20 rounded-xl text-clay text-sm">
+                                {error}
+                            </div>
                         )}
-                        <div className="flex justify-between text-lg font-bold pt-2 border-t border-ink/10 text-ink">
-                            <span>Total</span>
-                            <span>₹{total}</span>
-                        </div>
+
+                        <button
+                            onClick={handlePlaceOrder}
+                            disabled={isLoading}
+                            className="w-full mt-5 bg-turmeric text-parchment py-4 rounded-xl font-bold text-base hover:bg-clay disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-lg shadow-turmeric/25"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 size={20} className="animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle size={20} />
+                                    {paymentMode === 'cod' ? 'Place Order' : `Pay ₹${total}`}
+                                </>
+                            )}
+                        </button>
+
+                        <p className="text-[11px] text-ink/40 text-center mt-4 leading-relaxed">
+                            Secure checkout · Confirmation email & WhatsApp alerts after order
+                        </p>
                     </div>
-
-                    {infoMessage && (
-                        <div className="mt-4 p-3 bg-ink/5 border border-ink/15 rounded-lg text-ink/80 text-sm">
-                            {infoMessage}
-                        </div>
-                    )}
-
-                    {error && (
-                        <div className="mt-4 p-3 bg-clay/10 border border-clay/25 rounded-lg text-clay text-sm">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={handlePlaceOrder}
-                        disabled={isLoading}
-                        className="w-full mt-6 bg-turmeric text-parchment py-4 rounded-full font-bold text-lg hover:bg-clay disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 size={20} className="animate-spin" />
-                                Processing...
-                            </>
-                        ) : (
-                            <>
-                                <CheckCircle size={20} />
-                                {paymentMode === 'cod' ? 'Place Order' : `Pay ₹${total}`}
-                            </>
-                        )}
-                    </button>
-
-                    <p className="text-xs text-ink/40 text-center mt-4">
-                        Your payment information is secure and encrypted
-                    </p>
                 </div>
             </div>
         </div>
@@ -675,17 +715,20 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="min-h-screen bg-parchment py-8">
-            <div className="max-w-6xl mx-auto px-4">
-                <div className="mb-8">
+        <div className="min-h-screen bg-parchment py-8 md:py-12">
+            <div className="max-w-6xl mx-auto px-4 md:px-6">
+                <div className="mb-8 md:mb-10">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center gap-2 text-ink/60 hover:text-ink transition mb-4"
+                        className="inline-flex items-center gap-2 text-ink/55 hover:text-ink transition mb-4 text-sm"
                     >
-                        <ArrowLeft size={20} />
-                        <span>Back</span>
+                        <ArrowLeft size={18} />
+                        <span>Back to cart</span>
                     </button>
-                    <h1 className="font-display italic text-3xl text-ink">Checkout</h1>
+                    <h1 className="font-display italic text-3xl md:text-4xl text-ink">Checkout</h1>
+                    <p className="text-sm text-ink/50 mt-2">
+                        Complete your details — we&apos;ll email confirmation and notify the store on WhatsApp.
+                    </p>
                 </div>
 
                 <CheckoutForm
