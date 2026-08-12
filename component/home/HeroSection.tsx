@@ -19,6 +19,40 @@ type HeroSlide = {
     macros: Array<{ value: string; label: string }>;
 };
 
+const FALLBACK_SLIDES: HeroSlide[] = [
+    {
+        image: '/rakhsbandhangift.png',
+        video: '/rakhevideo.mp4',
+        imagePosition: 'object-[60%_40%]',
+        tag: 'Limited Time Offer · Raksha Bandhan Special',
+        title: 'Gift hamper that\ncelebrates love.',
+        subtitle:
+            'Healthy treats, beautiful Rakhi & Roli Chawal — all wrapped in endless sibling love. Only ₹379!',
+        cta: 'Order hamper now',
+        href: '/raksha-bandhan',
+        macros: [
+            { value: '₹379', label: 'Special Price' },
+            { value: '₹120', label: 'You Save' },
+            { value: '6', label: 'Items' },
+        ],
+    },
+    {
+        image: 'https://vrateez.s3.ap-south-1.amazonaws.com/All+three+infused+cookies.jpeg',
+        imagePosition: 'object-[70%_38%]',
+        tag: 'High Protein · Vrat Friendly',
+        title: 'Protein that\nfits your fast.',
+        subtitle:
+            'Millet-based protein cookies built for real training days — clean label, no compromise.',
+        cta: 'Shop protein cookies',
+        href: '/shop?category=cookies',
+        macros: [
+            { value: '10g', label: 'Protein' },
+            { value: '0g', label: 'Added Sugar' },
+            { value: '140', label: 'Calories' },
+        ],
+    },
+];
+
 const FEATURES = [
     { icon: Leaf, label: 'No Onion, No Garlic' },
     { icon: WheatOff, label: 'Gluten Free' },
@@ -84,7 +118,7 @@ function SattvicSeal() {
 }
 
 export default function HeroSection() {
-    const [slides, setSlides] = useState<HeroSlide[]>([]);
+    const [slides, setSlides] = useState<HeroSlide[]>(FALLBACK_SLIDES);
     const [loading, setLoading] = useState(true);
     const [current, setCurrent] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -95,11 +129,14 @@ export default function HeroSection() {
             try {
                 const banners = await getBannersApi();
                 if (!cancelled) {
-                    setSlides(banners.map(mapBannerToSlide).filter((s) => s.title && (s.image || s.video)));
+                    const mapped = banners
+                        .map(mapBannerToSlide)
+                        .filter((s) => s.title && (s.image || s.video));
+                    setSlides(mapped.length > 0 ? mapped : FALLBACK_SLIDES);
                     setCurrent(0);
                 }
             } catch {
-                if (!cancelled) setSlides([]);
+                if (!cancelled) setSlides(FALLBACK_SLIDES);
             } finally {
                 if (!cancelled) setLoading(false);
             }

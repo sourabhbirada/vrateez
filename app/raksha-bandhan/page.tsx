@@ -10,6 +10,35 @@ import { getDealsApi } from '@/lib/api/dealApi';
 import { getProductBySlugApi } from '@/lib/api/productApi';
 import type { Deal, Product } from '@/lib/api/types';
 
+const FALLBACK_LANDING_DEAL: Deal = {
+  _id: 'fallback-rakhi-landing',
+  title: 'Raksha Bandhan Gift Hamper',
+  subtitle: 'Celebrate the bond of love with a healthy gift!',
+  description:
+    'To health and happiness, Vrateez brings you endless siblings love wrapped in delicious treats. Each hamper includes energy bars, cookies, millet bites, Rakhi & Roli Chawal.',
+  badge: 'LIMITED TIME OFFER',
+  cta: 'Order Now',
+  ctaLink: '/product/raksha-bandhan-gift-hamper',
+  image: '/rakhsbandhangift.png',
+  video: '/rakhevideo.mp4',
+  price: 379,
+  originalPrice: 499,
+  items: [
+    'Energy Bar',
+    'Coconut Cookies',
+    'Dry Fruit Cookies',
+    'Millet Bites',
+    'Rakhi',
+    'Roli & Chawal',
+  ],
+  productSlug: 'raksha-bandhan-gift-hamper',
+  placement: 'landing',
+  bgFrom: '#FFF5E6',
+  bgTo: '#FFE8CC',
+  isActive: true,
+  position: 1,
+};
+
 export default function RakshaBandhanPage() {
   const [quantity, setQuantity] = useState(1);
   const [deal, setDeal] = useState<Deal | null>(null);
@@ -23,7 +52,7 @@ export default function RakshaBandhanPage() {
     async function load() {
       try {
         const deals = await getDealsApi('landing');
-        const active = deals[0] || null;
+        const active = deals[0] || FALLBACK_LANDING_DEAL;
         if (cancelled) return;
         setDeal(active);
         if (active?.productSlug) {
@@ -35,7 +64,7 @@ export default function RakshaBandhanPage() {
           }
         }
       } catch {
-        if (!cancelled) setDeal(null);
+        if (!cancelled) setDeal(FALLBACK_LANDING_DEAL);
       } finally {
         if (!cancelled) setLoading(false);
       }

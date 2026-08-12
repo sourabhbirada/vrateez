@@ -6,6 +6,35 @@ import { useEffect, useState } from 'react';
 import { getDealsApi } from '@/lib/api/dealApi';
 import type { Deal } from '@/lib/api/types';
 
+const FALLBACK_DEAL: Deal = {
+    _id: 'fallback-rakhi',
+    title: 'Raksha Bandhan Gift Hamper',
+    subtitle: 'Celebrate the bond of love with a healthy gift!',
+    description:
+        'To health and happiness, Vrateez brings you endless siblings love wrapped in delicious treats. Each hamper includes energy bars, cookies, millet bites, Rakhi & Roli Chawal.',
+    badge: 'LIMITED TIME OFFER',
+    cta: 'Order Now - Full Details',
+    ctaLink: '/raksha-bandhan',
+    image: '/rakhsbandhangift.png',
+    video: '/rakhevideo.mp4',
+    price: 379,
+    originalPrice: 499,
+    items: [
+        'Energy Bar',
+        'Coconut Cookies',
+        'Dry Fruit Cookies',
+        'Millet Bites',
+        'Rakhi',
+        'Roli & Chawal',
+    ],
+    productSlug: 'raksha-bandhan-gift-hamper',
+    placement: 'homepage',
+    bgFrom: '#FFF5E6',
+    bgTo: '#FFE8CC',
+    isActive: true,
+    position: 1,
+};
+
 function DealCard({ deal }: { deal: Deal }) {
     const href =
         deal.productSlug?.trim()
@@ -150,16 +179,16 @@ function DealCard({ deal }: { deal: Deal }) {
 }
 
 export default function DealOfferSection() {
-    const [deals, setDeals] = useState<Deal[]>([]);
+    const [deals, setDeals] = useState<Deal[]>([FALLBACK_DEAL]);
 
     useEffect(() => {
         let cancelled = false;
         async function load() {
             try {
                 const items = await getDealsApi('homepage');
-                if (!cancelled) setDeals(items);
+                if (!cancelled) setDeals(items.length > 0 ? items : [FALLBACK_DEAL]);
             } catch {
-                if (!cancelled) setDeals([]);
+                if (!cancelled) setDeals([FALLBACK_DEAL]);
             }
         }
         void load();
@@ -167,8 +196,6 @@ export default function DealOfferSection() {
             cancelled = true;
         };
     }, []);
-
-    if (!deals.length) return null;
 
     return (
         <>
