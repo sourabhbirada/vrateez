@@ -137,7 +137,11 @@ function CheckoutForm({
     const subtotal = totalPrice;
     const freeShippingThreshold = settings?.shipping?.freeShippingThreshold ?? 499;
     const standardShippingFee = settings?.shipping?.standardShippingFee ?? 49;
-    const shippingCharge = subtotal >= freeShippingThreshold ? 0 : standardShippingFee;
+    
+    // Check if any item has free delivery enabled
+    const hasFreeDeliveryProduct = items.some(item => item.freeDelivery === true);
+    
+    const shippingCharge = (subtotal >= freeShippingThreshold || hasFreeDeliveryProduct) ? 0 : standardShippingFee;
     const discountAmount = appliedCoupon?.discountAmount || 0;
     const total = Math.max(subtotal - discountAmount + shippingCharge, 0);
 
@@ -581,10 +585,18 @@ function CheckoutForm({
                                 <div key={item.id} className="flex gap-3">
                                     <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-ink/8 bg-parchment">
                                         <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                        {item.freeDelivery && (
+                                            <div className="absolute bottom-0 left-0 right-0 bg-basil/90 text-white text-[9px] font-bold text-center py-0.5">
+                                                FREE 🎁
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-ink truncate">{item.name}</p>
                                         <p className="text-xs text-ink/45">Qty {item.quantity}</p>
+                                        {item.freeDelivery && (
+                                            <span className="text-[10px] text-basil font-semibold">Free Delivery</span>
+                                        )}
                                     </div>
                                     <p className="text-sm font-semibold text-ink shrink-0">
                                         ₹{item.price * item.quantity}
@@ -648,7 +660,13 @@ function CheckoutForm({
                                     {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
                                 </span>
                             </div>
-                            {shippingCharge > 0 && (
+                            {hasFreeDeliveryProduct && shippingCharge === 0 && (
+                                <div className="flex items-center gap-1.5 text-xs text-basil bg-basil/8 rounded-lg px-2.5 py-1.5">
+                                    <span>🎁</span>
+                                    <span className="font-medium">Free delivery included with your product!</span>
+                                </div>
+                            )}
+                            {!hasFreeDeliveryProduct && shippingCharge > 0 && (
                                 <p className="text-xs text-turmeric bg-turmeric/8 rounded-lg px-2.5 py-1.5">
                                     Add ₹{Math.max(freeShippingThreshold - subtotal, 0)} more for free shipping
                                 </p>

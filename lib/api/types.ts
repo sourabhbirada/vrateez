@@ -80,6 +80,7 @@ export interface Product {
       }>;
     }>;
   };
+  freeDelivery?: boolean;
 }
 
 export interface Category {

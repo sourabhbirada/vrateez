@@ -86,6 +86,7 @@ export default function RakshaBandhanPage() {
         originalPrice: product.originalPrice,
         weight: product.weight,
         quantity,
+        freeDelivery: product.freeDelivery,
       });
       toggleCart();
     }

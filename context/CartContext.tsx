@@ -15,6 +15,7 @@ export interface CartItem {
     originalPrice: number;
     quantity: number;
     weight: string;
+    freeDelivery?: boolean;
 }
 
 interface CartContextType {
@@ -55,6 +56,7 @@ const mapApiCart = (cart: Cart): CartItem[] => {
         originalPrice: it.product.originalPrice,
         quantity: it.quantity,
         weight: it.product.weight,
+        freeDelivery: it.product.freeDelivery || false,
     }));
 };
 

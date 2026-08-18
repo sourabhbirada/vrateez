@@ -171,6 +171,7 @@ export default function ProductPage() {
             originalPrice: product.originalPrice + customizationDelta,
             weight: product.weight,
             quantity: orderQuantity,
+            freeDelivery: product.freeDelivery,
         });
     };
 

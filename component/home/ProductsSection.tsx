@@ -21,6 +21,7 @@ type ProductView = {
   originalPrice: number;
   discount: string;
   weight: string;
+  freeDelivery?: boolean;
 };
 
 function mapProduct(p: Product): ProductView {
@@ -36,6 +37,7 @@ function mapProduct(p: Product): ProductView {
     originalPrice: p.originalPrice,
     discount: p.discount,
     weight: p.weight,
+    freeDelivery: p.freeDelivery,
   };
 }
 
@@ -91,6 +93,7 @@ export default function ProductsSection() {
       price: product.price,
       originalPrice: product.originalPrice,
       weight: product.weight,
+      freeDelivery: product.freeDelivery,
     });
   };
 

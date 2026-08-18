@@ -29,6 +29,7 @@ interface ShopProduct {
     discount: string;
     weight: string;
     description: string;
+    freeDelivery?: boolean;
 }
 
 function ShopContent() {
@@ -92,6 +93,7 @@ function ShopContent() {
             price: product.price,
             originalPrice: product.originalPrice,
             weight: product.weight,
+            freeDelivery: product.freeDelivery,
         });
     };
 
