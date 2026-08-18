@@ -32,6 +32,7 @@ interface ProductView {
     amazonUrl?: string;
     packOptions?: PackOption[];
     customization?: ApiProduct['customization'];
+    freeDelivery?: boolean;
 }
 
 function mapApiProductToView(p: ApiProduct): ProductView {
@@ -55,6 +56,7 @@ function mapApiProductToView(p: ApiProduct): ProductView {
         amazonUrl: p.amazonUrl,
         packOptions: p.packOptions || [],
         customization: p.customization,
+        freeDelivery: p.freeDelivery,
     };
 }
 
