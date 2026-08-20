@@ -16,7 +16,8 @@ const WHY_PARTNER = [
 ];
 
 export default function BulkOrderPage() {
-    const BULK_ORDER_URL = process.env.NEXT_PUBLIC_BULK_ORDER_URL || '/bulk-order';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+    const BULK_ORDER_URL = `${API_BASE_URL}/bulk-order`;
 
     const [formData, setFormData] = useState({
         companyName: '',
