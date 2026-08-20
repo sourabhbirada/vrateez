@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, User, Search, Menu, X, LogOut, Package } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, LogOut, Package, MapPin } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useRef, useEffect } from 'react';
@@ -106,6 +106,10 @@ export default function Header() {
                     <nav className="hidden md:flex items-center gap-1 flex-1">
                         <Link href="/shop" className="text-gray-800 font-medium text-sm px-3 py-2 rounded-md hover:bg-black/5 transition whitespace-nowrap">
                             Shop
+                        </Link>
+                        <Link href="/track-order" className="text-gray-800 font-medium text-sm px-3 py-2 rounded-md hover:bg-black/5 transition whitespace-nowrap flex items-center gap-1.5">
+                            <MapPin size={14} />
+                            Track Order
                         </Link>
                         <Link href="/bulk-order" className="text-gray-800 font-medium text-sm px-3 py-2 rounded-md hover:bg-black/5 transition whitespace-nowrap">
                             Bulk Order
@@ -251,6 +255,10 @@ export default function Header() {
 
                         <Link href="/shop" onClick={() => setMobileOpen(false)} className="text-gray-800 font-medium text-sm py-2 px-2.5 rounded-md hover:bg-black/5 transition">
                             Shop
+                        </Link>
+                        <Link href="/track-order" onClick={() => setMobileOpen(false)} className="text-gray-800 font-medium text-sm py-2 px-2.5 rounded-md hover:bg-black/5 transition flex items-center gap-1.5">
+                            <MapPin size={14} />
+                            Track Order
                         </Link>
                         <Link href="/bulk-order" onClick={() => setMobileOpen(false)} className="text-gray-800 font-medium text-sm py-2 px-2.5 rounded-md hover:bg-black/5 transition">
                             Bulk Order
