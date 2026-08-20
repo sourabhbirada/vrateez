@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Search, Package, MapPin, Clock, Truck, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api/config';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 type TrackingEvent = {
   message: string;
