@@ -186,7 +186,7 @@ export default function DealOfferSection() {
         async function load() {
             try {
                 const items = await getDealsApi('homepage');
-                if (!cancelled) setDeals(items.length > 0 ? items : [FALLBACK_DEAL]);
+                if (!cancelled) setDeals(items );
             } catch {
                 if (!cancelled) setDeals([FALLBACK_DEAL]);
             }

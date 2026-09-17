@@ -1,5 +1,4 @@
 'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
@@ -20,22 +19,6 @@ type HeroSlide = {
 };
 
 const FALLBACK_SLIDES: HeroSlide[] = [
-    {
-        image: '/rakhsbandhangift.png',
-        video: '/rakhevideo.mp4',
-        imagePosition: 'object-[60%_40%]',
-        tag: 'Limited Time Offer · Raksha Bandhan Special',
-        title: 'Gift hamper that\ncelebrates love.',
-        subtitle:
-            'Healthy treats, beautiful Rakhi & Roli Chawal — all wrapped in endless sibling love. Only ₹379!',
-        cta: 'Order hamper now',
-        href: '/raksha-bandhan',
-        macros: [
-            { value: '₹379', label: 'Special Price' },
-            { value: '₹120', label: 'You Save' },
-            { value: '6', label: 'Items' },
-        ],
-    },
     {
         image: 'https://vrateez.s3.ap-south-1.amazonaws.com/All+three+infused+cookies.jpeg',
         imagePosition: 'object-[70%_38%]',

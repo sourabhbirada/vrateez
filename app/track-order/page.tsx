@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Package, MapPin, Clock, Truck, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
@@ -100,6 +100,15 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [tracking, setTracking] = useState<TrackingData | null>(null);
 
+  // Set document title for SEO
+  useEffect(() => {
+    document.title = 'Track Your Order | Vrateez - Real-time Order Tracking';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Track your Vrateez order in real-time. Enter your Order ID or Tracking Number to see live delivery status of your healthy vrat snacks and protein cookies.');
+    }
+  }, []);
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -116,7 +125,12 @@ export default function TrackOrderPage() {
     try {
       if (searchType === 'orderId') {
         // Search by Order ID (requires email for guest orders)
-        const emailParam = email ? `?email=${encodeURIComponent(email)}` : '';
+        if (!email.trim()) {
+          setError('Please enter your email address');
+          return;
+        }
+
+        const emailParam = `?email=${encodeURIComponent(email)}`;
         const response = await fetch(`${API_BASE_URL}/orders/track/${searchValue}${emailParam}`, {
           headers: {
             'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '',
@@ -126,7 +140,7 @@ export default function TrackOrderPage() {
         const data = await response.json();
 
         if (!data.status) {
-          throw new Error(data.message || 'Order not found');
+          throw new Error(data.message || 'Order not found. Please check your Order ID and email address.');
         }
 
         setOrder(data.data.order);
@@ -148,9 +162,39 @@ export default function TrackOrderPage() {
         }
       } else {
         // Search by Tracking Number
-        // First, we need to find the order with this tracking number
-        // Since we don't have a direct endpoint, we'll show a message
-        setError('Please use Order ID to track your order. You can find it in your order confirmation email.');
+        if (!email.trim()) {
+          setError('Please enter your email address');
+          return;
+        }
+
+        const emailParam = `?email=${encodeURIComponent(email)}`;
+        const response = await fetch(`${API_BASE_URL}/orders/track-by-number/${searchValue}${emailParam}`, {
+          headers: {
+            'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '',
+          },
+        });
+
+        const data = await response.json();
+
+        if (!data.status) {
+          throw new Error(data.message || 'Order not found with this tracking number and email.');
+        }
+
+        setOrder(data.data.order);
+
+        // Fetch tracking details
+        const trackingResponse = await fetch(
+          `${API_BASE_URL}/orders/${data.data.order._id}/tracking`,
+          {
+            headers: {
+              'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '',
+            },
+          }
+        );
+        const trackingData = await trackingResponse.json();
+        if (trackingData.status && trackingData.data.hasTracking) {
+          setTracking(trackingData.data.tracking);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch order details');
@@ -169,7 +213,10 @@ export default function TrackOrderPage() {
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Track Your Order</h1>
           <p className="text-gray-600">
-            Enter your Order ID to see real-time delivery status and tracking information
+            Enter your Order ID and email to see real-time delivery status
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Find your Order ID in the order confirmation email or SMS
           </p>
         </div>
 
@@ -219,24 +266,23 @@ export default function TrackOrderPage() {
               </div>
             </div>
 
-            {/* Email Input (for guest orders) */}
-            {searchType === 'orderId' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address <span className="text-gray-400 font-normal">(optional for logged in users)</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter the email used during checkout if you're not logged in
-                </p>
-              </div>
-            )}
+            {/* Email Input (always required) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Enter the email address used during checkout
+              </p>
+            </div>
 
             {/* Error Message */}
             {error && (

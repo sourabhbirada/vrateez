@@ -63,32 +63,73 @@ const geistMono = Geist_Mono({
 
 const SITE_NAME = "Vrateez";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vrateez.com";
-const SITE_DESCRIPTION = "Buy healthy protein cookies, energy bars & vrat-friendly snacks online in India. Made with millet, nuts & seeds. Zero added sugar, high protein, FSSAI certified. Free delivery on orders above ₹499.";
+const SITE_DESCRIPTION = "Buy vrat-friendly healthy protein cookies, energy bars & fasting snacks online in India. Perfect for vrat/upvas - made with millet, nuts & seeds. Zero added sugar, high protein, FSSAI certified. Free delivery on orders above ₹499.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Vrateez | Buy Healthy Protein Cookies & Energy Bars Online in India",
+    default: "Vrateez | Buy Vrat Food, Healthy Protein Cookies & Fasting Snacks Online",
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  icons: {
+    icon: [
+      { url: '/logo.png', sizes: 'any' },
+      { url: '/logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/logo.png',
+  },
   keywords: [
+    // Vrat/Fasting specific
+    "vrat food",
+    "vrat snacks",
+    "vrat cookies",
+    "fasting food",
+    "fasting snacks",
+    "upvas food",
+    "upvas snacks",
+    "navratri food",
+    "navratri snacks",
+    "vrat ka khana",
+    "vrat food online",
+    "healthy vrat snacks",
+    "vrat me khane wala",
+    "ekadashi food",
+    "karwa chauth food",
+    // Health & Nutrition
     "protein cookies",
     "healthy snacks",
     "energy bars",
-    "vrat food",
-    "fasting food",
+    "healthy cookies",
     "millet cookies",
     "sugar free snacks",
     "high protein snacks",
     "healthy cookies online",
-    "vrat snacks online",
-    "buy protein cookies India",
+    "wholesome snacks",
+    "nutritious snacks",
+    "guilt free snacks",
+    // Product types
     "almond cookies",
     "cashew cookies",
     "blueberry cookies",
-    "wholesome snacks",
+    "protein bars",
+    "energy cookies",
+    "healthy protein bars",
+    // Location & Buying
+    "buy protein cookies India",
+    "buy vrat food online",
+    "order vrat snacks",
+    "vrat food delivery",
     "FSSAI certified snacks",
+    // Occasions
+    "vrat food items",
+    "eat in vrat",
+    "what to eat during vrat",
+    "vrat-friendly food",
   ],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -103,20 +144,20 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: "Vrateez | Healthy Protein Cookies & Energy Bars",
+    title: "Vrateez | Vrat Food, Healthy Protein Cookies & Fasting Snacks",
     description: SITE_DESCRIPTION,
     images: [
       {
         url: `${SITE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: "Vrateez - Healthy Protein Snacks",
+        alt: "Vrateez - Vrat Food & Healthy Protein Snacks",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vrateez | Healthy Protein Cookies & Energy Bars",
+    title: "Vrateez | Vrat Food, Healthy Protein Cookies & Fasting Snacks",
     description: SITE_DESCRIPTION,
     images: [`${SITE_URL}/og-image.jpg`],
     creator: "@vrateez",
@@ -157,6 +198,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: SITE_NAME,
+              alternateName: "Vrateez - Vrat Food & Healthy Snacks",
               url: SITE_URL,
               logo: `${SITE_URL}/logo.png`,
               description: SITE_DESCRIPTION,
@@ -197,6 +239,33 @@ export default function RootLayout({
                 target: `${SITE_URL}/shop?search={search_term_string}`,
                 "query-input": "required name=search_term_string",
               },
+            }),
+          }}
+        />
+
+        {/* Structured Data - Store */}
+        <Script
+          id="store-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Store",
+              name: SITE_NAME,
+              image: `${SITE_URL}/logo.png`,
+              description: "Online store for vrat-friendly healthy protein cookies, energy bars and fasting snacks in India",
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "Jaipur",
+                addressRegion: "Rajasthan",
+                addressCountry: "IN",
+              },
+              priceRange: "₹₹",
+              telephone: "+91-9407230914",
+              url: SITE_URL,
+              currenciesAccepted: "INR",
+              paymentAccepted: "Cash, Credit Card, Debit Card, UPI",
+              openingHours: "Mo-Su 00:00-23:59",
             }),
           }}
         />

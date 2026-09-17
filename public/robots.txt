@@ -7,7 +7,9 @@ Disallow: /checkout
 Disallow: /account/
 Disallow: /order-success
 Disallow: /order-payment-error
-Disallow: /order-tracking
+
+# Allow order tracking page for SEO
+Allow: /track-order
 
 # Sitemap
 Sitemap: https://vrateez.com/sitemap.xml
